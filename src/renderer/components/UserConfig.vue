@@ -118,6 +118,19 @@ export default {
               s.push(user);
             }
           }
+          this.$store.update((data)=>{
+                let newData = []
+                for(let u of data.users){
+                  if(u.id===deleteuser.id){
+                    
+                  }else{
+                    newData.push(u);
+                  }
+                }
+                data.users = newData;
+              });
+              /* 更新store */
+
           this.$store.users = s;
           this.$eve.emit("userListUpdated");
 
