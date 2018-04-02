@@ -1,13 +1,21 @@
 # BLS
 
-> Bilibili Live Super 
+> Bilibili Live Superviser
 
 #### 更新日志
+- 2018年4月2日，上传第一个可用版本到github
 - 2018年2月17日14:41:55，提交第一个版本，完成了多账户登陆控制，弹幕服务器连接控制，基本流程控制
 - 技术栈: Nodejs / Electron / Vue / element.ui
 
+#### 二进制文件下载
+- [Github-Releases](https://github.com/mscststs/BLS/releases)
+
+
 
 #### Build Setup
+
+> 建议使用yarn
+
 
 ``` bash
 # install dependencies
