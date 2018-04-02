@@ -59,7 +59,7 @@ export default {
         this.KitMsg(message);
       });
       this.$eve.on("giftCount", (user,name,number,type) => {
-        this.KitMsg(`${this.formatTime} : ${user} 从${type}获取了 ${number} 个 ${name}`);
+        this.KitMsg(`${user} 从${type}获取了 ${number} 个 ${name}`);
       });
       this.$eve.on("success", message => {
         this.KitMsg(message, "success");
@@ -103,6 +103,7 @@ export default {
         type,
         msg
       });
+      console.log(`${time} :　${msg}`);
       if(this.msg.length>1000){
         /* 只保留最近1k条日志 */
         this.msg.pop();

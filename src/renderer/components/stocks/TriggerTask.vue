@@ -26,6 +26,7 @@
 </template>
 
 <script>
+import { setTimeout } from 'timers';
 export default {
   name: "TriggerTask",
   data() {
@@ -37,13 +38,25 @@ export default {
       Raffle: {
         roomid: "无",
         Raffle_id: "无"
-      }
+      },
+      indiv:[],
     };
   },
   mounted() {
     this.AddListener();
   },
   methods: {
+    isExsit(str){
+      if(this.indiv.indexOf(str)>=0){
+        return true;
+      }else{
+        this.indiv.push(str);
+        setTimeout(()=>{
+          this.indiv.shift();
+        },1000*60*5);//五分钟后移除
+        return false;
+      }
+    },
     AddListener() {
       this.$eve.on("dm_SmallTv", data => {
         // console.log(data);
@@ -74,6 +87,11 @@ export default {
         !res.data.is_hidden
       ) {
         //非钓鱼房间
+        let delay = (10+Math.ceil(Math.random()*20))*1000;
+        // console.log("延迟 " + delay/1000);
+        await this.sleep(delay);//延迟一定时间，据说有用
+        // console.log("延迟结束");
+
         cb();
       } else {
         this.$eve.emit("error", "检测到钓鱼房间！" + roomid);
@@ -94,6 +112,8 @@ export default {
                 let giftnum = gift.split("X")[1];
                 let giftname = gift.split("X")[0];
                 this.$eve.emit("giftCount", user.name, giftname, giftnum,"app抽奖"); //提交统计
+            }else{
+              this.$eve.emit("info",`${user.name} 参加APP抽奖：${join.msg}`);
             }
         }catch(e){
             this.$eve.emit("info",`${user.name} 参加app 抽奖时: ${e.message}`);
@@ -150,6 +170,9 @@ export default {
             this.$eve.emit("giftCount", user.name, giftname, giftnum,"pc抽奖"); //提交统计
           }
         }
+        else{
+              this.$eve.emit("info",`${user.name} 参加PC抽奖：${join.msg}`);
+            }
       } catch (e) {
         this.$eve.emit("info", `${user.name} 在参加抽奖时: ${e.message}`);
       }
@@ -168,6 +191,9 @@ export default {
                 Raffle_id:rf.raffleId,
             }
           if (rf.status === 1) {
+            if(this.isExsit(`pc抽奖${rf.raffleId}`)){
+              continue;
+            }
             let id = rf.raffleId;
             for (let user of this.$store.users) {
               if (user.config.Raffle && user.isLogin) {
@@ -194,7 +220,9 @@ export default {
             let giftname = notice.data.gift_name;
             this.$eve.emit("giftCount", user.name, giftname, giftnum,"小电视抽奖"); //提交统计
           }
-        }
+        }else{
+              this.$eve.emit("info",`${user.name} 参加小电视抽奖：${join.msg}`);
+            }
       } catch (e) {
         this.$eve.emit("info", `${user.name} 参与小电视抽奖时: ${e.message}`);
       }
@@ -209,6 +237,9 @@ export default {
             SmallTv_id: sm.raffleId
           };
           if (sm.status === 1) {
+            if(this.isExsit(`小电视${sm.raffleId}`)){
+              continue;
+            }
             let id = sm.raffleId;
             for (let user of this.$store.users) {
               if (user.config.SmallTv && user.isLogin) {
