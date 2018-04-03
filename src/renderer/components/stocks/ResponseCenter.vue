@@ -94,16 +94,18 @@ export default {
       this.msg=  [];
     },
     KitMsg(msg, type = "info") {
+      
+      let time = this.formatTime(new Date(),"HH:mm:ss");
+      
+      console.log(`${time} :　${msg}`);
       if(!this.allowLog){ //判断是否允许日志
         return ;
       }
-      let time = this.formatTime(new Date(),"HH:mm:ss");
       this.msg.unshift({
         time,
         type,
         msg
       });
-      console.log(`${time} :　${msg}`);
       if(this.msg.length>1000){
         /* 只保留最近1k条日志 */
         this.msg.pop();

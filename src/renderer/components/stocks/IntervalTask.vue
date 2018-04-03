@@ -7,7 +7,7 @@
                   <el-tag type="warning">上次运行时间: {{DailySign.LastRun}}</el-tag>
               </el-col>
               <el-col :span="8">
-                  <el-button type="success" size="small" @click="Sign">手动执行</el-button>
+                  <el-button type="success" size="small" @click="BtnClick_Sign">手动执行</el-button>
               </el-col>
             </el-row>
         </el-collapse-item>
@@ -34,7 +34,7 @@
 
 <script>
 import { CronJob } from "cron";
-import { setTimeout } from "timers";
+import { setTimeout, clearTimeout } from "timers";
 export default {
   name: "IntervalTask",
   data() {
@@ -63,7 +63,7 @@ export default {
         this.Sign();
         this.DailyTask(); //顺便做一下每日任务
         this.TuanSign(); //应援团签到
-        this.Silver();
+        this.Silver(); //宝箱
       });
       this.$eve.on("HeartBeat", () => {
         this.KeepAlive();
@@ -71,6 +71,12 @@ export default {
       this.$eve.on("dailyWishes", () => {
         this.getWishes();
       });
+    },
+    BtnClick_Sign(){
+      //手动触发每日签到
+      this.Sign();
+      this.DailyTask(); //顺便做一下每日任务
+      this.TuanSign(); //应援团签到
     },
     sleep(ms) {
       return new Promise(reject => {
@@ -159,18 +165,17 @@ export default {
         try{
             let list  = await this.$api.use(user).origin(
               {
-                uri:"http://api.vc.bilibili.com/link_group/v1/member/my_groups",
+                uri:"https://api.vc.bilibili.com/link_group/v1/member/my_groups",
                 qs:user.SignWithBasicQuery({
                     access_key: user.token.access_token
                   }),
                 method:"get",
             });
-            console.log(list);
             if(list.code===0){
                 for(let group of list.data.list){
                     let sign = await this.$api.use(user).origin(
                       {
-                        uri:"http://api.vc.bilibili.com/link_setting/v1/link_setting/sign_in",
+                        uri:"https://api.vc.bilibili.com/link_setting/v1/link_setting/sign_in",
                         qs:user.SignWithBasicQuery({
                             group_id:group.group_id,
                             owner_id:group.owner_uid,
@@ -178,8 +183,8 @@ export default {
                         }),
                         method:"get",
                     });
-                    this.$eve.emi("info",`${user.name} 应援团签到 `);
-                    //发送请求即可，回复无所谓
+                    this.$eve.emit("info",`${user.name} 应援团 [ ${group.group_name} ] 签到 :${sign.msg}`);
+                    //发送请求即可
                 }
             }
         }catch(e){

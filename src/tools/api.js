@@ -8,7 +8,24 @@ function  sleep(ms){
         setTimeout(()=>{reject(ms)},ms);
     })
 }
+function isJSON(str) {
+    if (typeof str == 'string') {
+        try {
+            var obj=JSON.parse(str);
+            if(typeof obj == 'object' && obj ){
+                return true;
+            }else{
+                return false;
+            }
 
+        } catch(e) {
+            //console.log('error：'+str+'!!!'+e);
+            return false;
+        }
+    }
+    return false;
+    //console.log('It is not a string!')
+}
 /* 直接使用api对象,这是一个全局对象 */
 export default new class{
     constructor(){
@@ -128,6 +145,9 @@ export default new class{
         try{
             res = await rq(options);//必须返回request-promise模块的promise
             //必须放置在try块中，否则会抛出错误导致thread死锁
+            if(isJSON(res)){
+                res = JSON.parse(res);
+            }
         }catch(e){
             throw e;
         }finally{
