@@ -68,8 +68,8 @@ export default {
       this.$eve.on("dm_raffle", data => {
         // console.log(data);
         this.Checkfish(data, () => {
-          this.raffle(data);
           this.appraffle(data);
+          this.raffle(data);
         });
       });
     },
@@ -156,9 +156,9 @@ export default {
           { roomid, raffleId },
           "get"
         );
-        // console.log(join);
+        //console.log(join);
         if (join.code === 0) {
-          await this.sleep(120 * 1e3); // 两分钟
+          await this.sleep(180 * 1e3); // 改成三分钟
           let notice = await api.send(
             "activity/v1/Raffle/notice",
             { roomid, raffleId },
@@ -168,6 +168,8 @@ export default {
             let giftnum = notice.data.gift_num;
             let giftname = notice.data.gift_name;
             this.$eve.emit("giftCount", user.name, giftname, giftnum,"pc抽奖"); //提交统计
+          }else{
+              this.$eve.emit("info",`${user.name} 获取PC结果：${notice.msg}`);
           }
         }
         else{
@@ -178,6 +180,9 @@ export default {
       }
     },
     async raffle(data) {
+      await this.sleep(5000);
+      //临时等待5s，防止双端无效
+
       let roomid = data.real_roomid;
       let rq = await this.$api.send(
         "activity/v1/Raffle/check",
@@ -219,6 +224,8 @@ export default {
             let giftnum = notice.data.gift_num;
             let giftname = notice.data.gift_name;
             this.$eve.emit("giftCount", user.name, giftname, giftnum,"小电视抽奖"); //提交统计
+          }else{
+              this.$eve.emit("info",`${user.name} 获取小电视结果：${notice.msg}`);
           }
         }else{
               this.$eve.emit("info",`${user.name} 参加小电视抽奖：${join.msg}`);
