@@ -157,16 +157,28 @@ export default {
     },
     async userTuanSign(user){
         try{
-            let list  = await this.$api.use(user).send("link_group/v1/member/my_groups",user.SignWithBasicQuery({
-                access_key: user.token.access_token
-            }),"get");
+            let list  = await this.$api.use(user).origin(
+              {
+                uri:"http://api.vc.bilibili.com/link_group/v1/member/my_groups",
+                qs:user.SignWithBasicQuery({
+                    access_key: user.token.access_token
+                  }),
+                method:"get",
+            });
+            console.log(list);
             if(list.code===0){
                 for(let group of list.data.list){
-                    let sign = await this.$api.use(user).send("link_setting/v1/link_setting/sign_in",user.SignWithBasicQuery({
-                        group_id:group.group_id,
-                        owner_id:group.owner_uid,
-                        access_key: user.token.access_token,
-                    }),"get");
+                    let sign = await this.$api.use(user).origin(
+                      {
+                        uri:"http://api.vc.bilibili.com/link_setting/v1/link_setting/sign_in",
+                        qs:user.SignWithBasicQuery({
+                            group_id:group.group_id,
+                            owner_id:group.owner_uid,
+                            access_key: user.token.access_token,
+                        }),
+                        method:"get",
+                    });
+                    this.$eve.emi("info",`${user.name} 应援团签到 `);
                     //发送请求即可，回复无所谓
                 }
             }
