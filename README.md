@@ -8,8 +8,11 @@
 - 技术栈: Nodejs / Electron / Vue / element.ui
 
 #### 安装文件下载(.exe文件)
+> 下载最新安装包即可使用
 - [Github-Releases](https://github.com/mscststs/BLS/releases)
 
+#### 功能简介
+- BLS功能简介: [查看 Wiki](https://github.com/mscststs/BLS/wiki) 
 
 
 #### Build Setup
