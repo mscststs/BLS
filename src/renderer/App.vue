@@ -47,12 +47,12 @@ div.el-tabs__content {
   height: calc(100% - 30px);
   overflow-y: auto;
 }
-div.el-tabs__content::-webkit-scrollbar {
+div::-webkit-scrollbar {
   width: 8px;
   background-color: transparent;
 }
 
-div.el-tabs__content::-webkit-scrollbar-thumb {
+div::-webkit-scrollbar-thumb {
   box-shadow: 0 0 0 1px #fff inset;
   background-color: #aaa;
   border-radius: 20px;

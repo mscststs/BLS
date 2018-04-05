@@ -16,6 +16,9 @@
       <el-tab-pane label="触发任务" name="触发任务">
         <trigger-task></trigger-task>
       </el-tab-pane>
+      <el-tab-pane label="统计中心" name="统计中心">
+        <count-center></count-center>
+      </el-tab-pane>
       <el-tab-pane label="调度响应" name="调度响应">
         <response-center></response-center>
       </el-tab-pane>
@@ -35,6 +38,7 @@ import ConfigCenter from "@/components/stocks/ConfigCenter"
 import IntervalTask from "@/components/stocks/IntervalTask"
 import TriggerTask from "@/components/stocks/TriggerTask"
 import Mock from "@/components/stocks/Mock"
+import CountCenter from "@/components/stocks/CountCenter"
 
 export default {
   name:"MultipleStocks",
@@ -46,6 +50,7 @@ export default {
           "配置中心",
           "定时任务",
           "触发任务",
+          "统计中心",
           "调度响应",
           "关于",
         ],
@@ -58,6 +63,7 @@ export default {
     ConfigCenter, //配置中心
     IntervalTask, //定时任务
     TriggerTask, //触发任务
+    CountCenter, //统计中心
     ResponseCenter, //调度响应
     About, //关于
   },
