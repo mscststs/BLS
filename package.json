@@ -25,6 +25,10 @@
     "files": [
       "dist/electron/**/*"
     ],
+    "nsis":{
+      "oneClick":false,
+      "allowToChangeInstallationDirectory":true
+    },
     "dmg": {
       "contents": [
         {
