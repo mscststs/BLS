@@ -68,9 +68,6 @@ export default {
       this.$eve.on("HeartBeat", () => {
         this.KeepAlive();
       });
-      this.$eve.on("dailyWishes", () => {
-        this.getWishes();
-      });
     },
     BtnClick_Sign(){
       //手动触发每日签到
@@ -239,14 +236,6 @@ export default {
         null,
         true
         // timeZone:"China/Shanghai",
-      );
-      let dailyWishesJob = new CronJob(
-        "0 50 23 * * *",
-        () => {
-          this.$eve.emit("dailyWishes");
-        },
-        null,
-        true
       );
     },
     formatTime(date = new Date(), fmt = "YYYY-MM-DD HH:mm:ss") {
