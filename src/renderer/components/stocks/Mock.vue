@@ -36,7 +36,7 @@
             </el-form>
         </el-col>
         <el-col :span="24">
-            <el-alert type="info"  v-for="res in aResult" :key="res.user" :title="res.user" style="margin:2px 0;">{{res.result}}</el-alert>
+            <el-alert type="info"  v-for="res in aResult" :key="res.user" :title="res.user" style="margin:2px 0;" :closable="false">{{res.result}}</el-alert>
         </el-col>
       </el-row>
   </div>
