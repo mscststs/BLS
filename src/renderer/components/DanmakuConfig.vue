@@ -152,7 +152,6 @@ export default {
         this.room.switch = false;
       });
       this.dm.on("data", data => {
-
         switch (data.type) {
           case "comment":
             this.$eve.emit("dm_chat", data);

@@ -21,6 +21,19 @@
               </el-col>
             </el-row>
         </el-collapse-item>
+
+
+        <el-collapse-item name="批量更新cookies" title="批量更新cookies">
+            <el-row :gutter="20">
+              <el-col :span="16">
+                  <el-tag type="warning">上次运行时间: {{AutoRefreshToken.LastRun}}</el-tag>
+              </el-col>
+              <el-col :span="8">
+                  <el-button type="success" size="small" @click="RefreshToken">手动执行</el-button>
+              </el-col>
+            </el-row>
+        </el-collapse-item>
+
         <el-collapse-item name="保持在线" title="保持在线">
             <el-row :gutter="20">
               <el-col :span="16">
@@ -48,9 +61,10 @@ export default {
       HeartBeat: {
         LastRun: "无"
       },
-      dailyWishes: {
-        open: false
-      }
+      AutoRefreshToken:{
+        LastRun:"无"
+      },
+
     };
   },
   mounted() {
@@ -68,6 +82,15 @@ export default {
       this.$eve.on("HeartBeat", () => {
         this.KeepAlive();
       });
+      this.$eve.on("TowDayTick",()=>{
+        this.RefreshToken();//更新token
+      })
+    },
+    async RefreshToken(){
+      this.AutoRefreshToken.LastRun = this.formatTime();
+      for(let user of this.$store.users){
+        await user.RefreshToken();
+      };
     },
     BtnClick_Sign(){
       //手动触发每日签到
@@ -227,6 +250,18 @@ export default {
         true
         // timeZone:"China/Shanghai",
       );
+
+      //每2天自动重新登录
+      let SeveralDayTick = new CronJob(
+        "00 00 00 */2 * *",
+        () => {
+          this.$eve.emit("TowDayTick"); // 触发dailyTick事件
+        },
+        null,
+        true
+        // timeZone:"China/Shanghai",
+      );
+
       this.$eve.emit("HeartBeat"); // 触发心跳请求
       let heartjob = new CronJob(
         "0 */5 * * * *",
