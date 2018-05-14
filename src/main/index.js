@@ -1,4 +1,7 @@
-import { app, BrowserWindow,Menu,ipcMain } from 'electron'
+import { app, BrowserWindow, Menu, ipcMain } from 'electron'
+import { fork } from 'child_process';
+import eve from "../tools/events.js";
+
 
 /**
  * Set `__static` path to static files in production
@@ -13,7 +16,7 @@ const winURL = process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
   : `file://${__dirname}/index.html`
 
-function createWindow () {
+function createWindow() {
   /**
    * Initial window options
    */
@@ -22,12 +25,12 @@ function createWindow () {
     height: 700,
     useContentSize: true,
     width: 1200,
-    minWidth:850,//最小窗口宽度
-    minHeight:400,//最小窗口高度
-    fullscreenable:false,//禁止最大化
+    minWidth: 850,//最小窗口宽度
+    minHeight: 400,//最小窗口高度
+    fullscreenable: false,//禁止最大化
   })
-  ipcMain.on("DevTools",()=>{
-    mainWindow.webContents.openDevTools ();
+  ipcMain.on("DevTools", () => {
+    mainWindow.webContents.openDevTools();
   })
 
   mainWindow.loadURL(winURL)
@@ -70,3 +73,15 @@ app.on('ready', () => {
   if (process.env.NODE_ENV === 'production') autoUpdater.checkForUpdates()
 })
  */
+
+
+
+ /* ipc与eve绑定的进程间通信中介 */
+ipcMain.on("MainMessageTranslate",(event,key,...args)=>{
+  eve.emit(key,...args);
+});
+eve.on("ipc",(key,...args)=>{
+  mainWindow.webContents.send("renderMessageTranslate",key,...args);
+  return false;
+});
+

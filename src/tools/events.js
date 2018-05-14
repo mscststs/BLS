@@ -24,7 +24,7 @@ export default new class{
     emit(event,...data){
         if(this.handles[event]){
             for(let i of this.handles[event]){
-                if(i.callback(...data)===false) break;
+                if(i.callback(...data)===false) return;
             }
         }
     }

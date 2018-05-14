@@ -31,81 +31,77 @@
 </template>
 
 <script>
+import QQ  from "~/tools/qqbot/index.js";
 
-import {QQ} from "qq-bot-rebown";
-import { addListener } from 'cluster';
-global.log = console.log;
 
 export default {
-    name:"ImmediateNote",
-    data(){
-        return{
-            qq:null,
-            Options:{
-                u:"",
-                p:"",
-                status:false,
-                listen:{
-                    buddy:true,
-                    discu:true,
-                    group:true,
-                    pass:"苹朵",
-                }
-            },
-            QueueMsg:[],
-
+  name: "ImmediateNote",
+  data() {
+    return {
+      qq: null,
+      Options: {
+        u: "",
+        p: "",
+        status: false,
+        listen: {
+          buddy: true,
+          discu: true,
+          group: true,
+          pass: "苹朵"
         }
+      },
+      QueueMsg: []
+    };
+  },
+  mounted() {
+    this.addListener();
+  },
+  methods: {
+    addListener() {
+      this.$eve.on("IM", msg => {
+        /* IM的消息添加到队列 */
+        this.QueueMsg.push(msg);
+      });
     },
-    mounted(){
-        this.addListener();
+    Loginswitch(status) {
+      if (status) {
+        console.log("尝试登录");
+        this.Login();
+      } else {
+        //this.qq._alive = false;
+      }
     },
-    methods:{
-        addListener(){
-            this.$eve.on("IM",(msg)=>{
-                /* IM的消息添加到队列 */
-                this.QueueMsg.push(msg);
-            });
+    async Login() {
+      let qq = new QQ({
+        app: {
+          login: 1
         },
-        Loginswitch(status){
-            if(status){
-                console.log("尝试登录");
-                this.Login();
-            }else{
-                this.qq._alive = false;
-            }
-        },
-        async Login(){
-            const qq = new QQ({
-                app:{
-                    login:1,
-                },
-                auth:{
-                    u:this.Options.u,
-                    p:this.Options.p,
-                },
-                font:{
-                    color:"229b33",
-                },
-            });
-            qq.on("msg",msg=>{
-                /* 消息收到 */
-                console.log(msg);
-            });
-            qq.on("disconnect",()=>{
-                this.$eve.emit("error","QQ已断开");
-            });
-            qq.on("error",(err)=>{
-                this.$eve.emit("error","QQ模块出错"+err.message);
-            });
-            qq.on("login-success",()=>{
-                /* 登录成功操作 */
-                this.$eve.emit("success","QQ登录成功");
-            });
-            qq.run();
-            this.qq = qq;
-        },
-    },
-}
+        auth: {
+          u: this.Options.u,
+          p: this.Options.p
+        }
+      });
+      qq.on("msg", msg => {
+        /* 消息收到 */
+        this.$eve.emit("info",msg);
+      });
+
+      qq.on("disconnect", () => {
+        this.$eve.emit("ipc", "error", "已断开");
+      });
+      qq.on("error", err => {
+        this.$eve.emit("ipc", "error", "QQ模块出错" + err.message);
+      });
+      qq.on("login-success", () => {
+        /* 登录成功操作 */
+        this.$eve.emit("ipc", "success", "QQ登录成功");
+      });
+      console.log("Settings  Done");
+      qq.run();
+      this.qq = qq;
+    }
+  }
+};
 </script>
 
 <style>
