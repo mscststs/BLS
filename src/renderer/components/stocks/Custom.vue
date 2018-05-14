@@ -55,6 +55,18 @@
     <el-collapse-item name="获取cookies" title="获取cookies">
       <el-button type="primary" plain size="small" @click="getUserCookies">复制到剪贴板</el-button>
     </el-collapse-item>
+    <el-collapse-item name="总督" title="总督亲密度领取(所有用户)">
+      <el-form inline size="small" :model="guardGift">
+        <el-form-item label="房间号">
+          <el-input placeholder="房间号1;房间号2..." v-model="guardGift.roomid"></el-input>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" plain size="small" @click="getGuardGift" :disabled="!guardGift.roomid.length">领取亲密度</el-button>
+        </el-form-item>
+      </el-form>
+      
+      
+    </el-collapse-item>
   </el-collapse>
 </div>
 </template>
@@ -88,7 +100,10 @@ export default {
         nowQuality:"",
         allowedQuality:[],
       },
-      users: []
+      users: [],
+      guardGift:{
+        roomid:"",
+      }
     };
   },
   computed: {
@@ -106,6 +121,61 @@ export default {
         this.users = [];
         this.users = this.$store.users;
       });
+    },
+    getGuardGift(){
+      let roomid =this.guardGift.roomid;
+      let roomid_array = roomid.match(/[0-9]{1,}/ig);//获取房间号数组
+      for(let shortid of roomid_array){
+        this.checkguardGift(shortid);
+      }
+      this.$eve.emit("success","领取成功");
+    },
+    async checkguardGift(shortid){
+      //通过短号为所有
+      let rq = await this.$api.send(
+            "room/v1/Room/room_init",
+            { id: shortid },
+            "get"
+          );
+          if(rq.code===0){
+            let long_id = rq.data.room_id;
+            //check
+            let ck = await this.$api.send(
+              "lottery/v1/lottery/check",
+              {roomid:long_id},
+              "get"
+            );
+            if(ck.code===0){
+              let GudList = ck.data.guard;
+              if(GudList.length){
+                //有总督
+                for(let gud of GudList){
+                  let id = gud.id;
+                  let type = gud.keyword;
+                  for(let user of this.$store.users){
+                    let s =await  this.$api.use(user).send(
+                      "lottery/v1/lottery/join",
+                      {roomid:long_id,type,id},
+                      "post"
+                    );
+                    if(s.code===0){
+                      this.$eve.emit("info",`${user.name} 从 ${shortid} 得到 ${s.data.message}`);
+                    }else{
+                      this.$eve.emit("info",`${user.name} 从 ${shortid} 领取亲密度 ${s.msg}`);
+                    }
+                  }
+                }
+
+              }else{
+                //没有总督呀
+              }
+            }else{
+              this.$eve.emit("info",`检查房间${long_id}的总督时出错`);
+            }
+
+          }else{
+            this.$eve.emit("error",`房间号 ${shortid} 不合法`);
+          }
     },
     getUserCookies(){
       if(this.custom.selected.length!==1){

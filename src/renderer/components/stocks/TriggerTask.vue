@@ -209,17 +209,17 @@ export default {
         }
       }
     },
-    async getSmallTv(roomid, raffleId, user) {
+    async getSmallTv(roomid, raffleId, user,type) {
       try {
         let join = await this.$api
           .use(user)
-          .send("gift/v2/smalltv/join", { roomid, raffleId }, "get");
+          .send("gift/v3/smalltv/join", { roomid, raffleId }, "get");
         if (join.code === 0) {
           let Time = join.data.time + 60;
           await this.sleep(Time * 1e3);
           let notice = await this.$api
             .use(user)
-            .send("gift/v2/smalltv/notice", { roomid, raffleId }, "get");
+            .send("gift/v3/smalltv/notice", { type, raffleId }, "get");
           if (notice.code === 0) {
             let giftnum = notice.data.gift_num;
             let giftname = notice.data.gift_name;
@@ -236,22 +236,23 @@ export default {
     },
     async smalltv(data) {
       let roomid = data.real_roomid;
-      let rq = await this.$api.send("gift/v2/smalltv/check", { roomid }, "get");
+      let rq = await this.$api.send("gift/v3/smalltv/check", { roomid }, "get");
       if (rq.code === 0) {
-        for (let sm of rq.data) {
+        for (let sm of rq.data.list) {
           this.SmallTv = {
             roomid: data.roomid,
-            SmallTv_id: sm.raffleId
+            SmallTv_id: sm.raffleId,
           };
           if (sm.status === 1) {
             if(this.isExsit(`小电视${sm.raffleId}`)){
               continue;
             }
             let id = sm.raffleId;
+            let type = sm.type;
             for (let user of this.$store.users) {
               if (user.config.SmallTv && user.isLogin) {
                 // console.log(roomid + " " + id);
-                this.getSmallTv(roomid, id, user);
+                this.getSmallTv(roomid, id, user,type);
               }
             }
           }
