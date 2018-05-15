@@ -2,7 +2,7 @@
 <div class="about">
   <el-container>
     <el-header>
-       <h1>BLS调度平台</h1>
+       <h1>BLS调度平台&nbsp;&nbsp;v{{version}}</h1>
     </el-header>
     <el-main>
      <p>用于批量调度账号，进行操作</p>
@@ -16,23 +16,88 @@
        <el-form-item label="">
          <el-button type="primary" plain @click="dev">开发者工具</el-button>
        </el-form-item>
+       <el-form-item label="">
+         <el-button type="infor" plain @click="checkUpdate" :loading="load" :disabled="load">检查更新</el-button>
+       </el-form-item>
      </el-form>
     </el-main>
     <el-footer>
      <p> Powered By MSCSTSTS - All Rights Reserved.</p>
     </el-footer>
+
+
+    <el-dialog
+      :title="nv.title"
+      :visible.sync="nv.dialogVisible"
+      width="30%">
+      <span>{{nv.name}}</span>
+      <br>
+      <span v-for="d in nv.body" :key="d">{{d}}<br></span>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="nv.dialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="ShowNewVersion">查 看</el-button>
+      </span>
+    </el-dialog>
+
+
   </el-container>
 </div>
 </template>
 <script>
 import {shell,ipcRenderer} from "electron";
+import config from "../../../../package.json";
+import rq from "request-promise-native"
+
 export default {
   name: "About",
   data() {
-    return {};
+    return {
+      version:config.version,
+      load:false,
+      nv:{
+        dialogVisible:false,
+        title:"",
+        name:"",
+        nvurl:"",
+        body:[],
+      }
+    };
   },
-  mounted() {},
+  mounted() {
+    
+  },
   methods: {
+    ShowNewVersion(){
+      this.nv.dialogVisible = false;
+      shell.openExternal(this.nv.nvurl);
+    },
+    async checkUpdate(){
+      this.load=true;
+      let qs = await rq({
+        method:"get",
+        uri:"https://api.github.com/repos/mscststs/BLS/releases/latest",
+        headers:{
+          "User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36",
+        },
+        json: true
+      });
+      if(qs.tag_name){
+        if(qs.tag_name==this.version){
+          //已是最新版
+          this.$eve.emit("success","检查更新：已是最新版");
+        }else{
+          let body = qs.body.split(/\r\n/);
+          this.nv={
+            dialogVisible:true,
+            title:`发现新版本${qs.tag_name}`,
+            name:qs.name,
+            nvurl:qs.html_url,
+            body,
+          }
+        }
+      }
+      this.load=false;
+    },
     dev(){
       ipcRenderer.send("DevTools");
     },
