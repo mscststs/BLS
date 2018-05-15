@@ -47,6 +47,7 @@
 import {shell,ipcRenderer} from "electron";
 import config from "../../../../package.json";
 import rq from "request-promise-native"
+import { setTimeout } from 'timers';
 
 export default {
   name: "About",
@@ -73,29 +74,35 @@ export default {
     },
     async checkUpdate(){
       this.load=true;
-      let qs = await rq({
-        method:"get",
-        uri:"https://api.github.com/repos/mscststs/BLS/releases/latest",
-        headers:{
-          "User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36",
-        },
-        json: true
-      });
-      if(qs.tag_name){
-        if(qs.tag_name==this.version){
-          //已是最新版
-          this.$eve.emit("success","检查更新：已是最新版");
-        }else{
-          let body = qs.body.split(/\r\n/);
-          this.nv={
-            dialogVisible:true,
-            title:`发现新版本${qs.tag_name}`,
-            name:qs.name,
-            nvurl:qs.html_url,
-            body,
+      try{
+        let qs = await rq({
+          method:"get",
+          uri:"https://api.github.com/repos/mscststs/BLS/releases/latest",
+          headers:{
+            "User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36",
+          },
+          json: true,
+          timeout:5000,
+        });
+        if(qs.tag_name){
+          if(qs.tag_name==this.version){
+            //已是最新版
+            this.$eve.emit("success","检查更新：已是最新版");
+          }else{
+            let body = qs.body.split(/\r\n/);
+            this.nv={
+              dialogVisible:true,
+              title:`发现新版本${qs.tag_name}`,
+              name:qs.name,
+              nvurl:qs.html_url,
+              body,
+            }
           }
         }
+      }catch(e){
+        this.$eve.emit("error","网络异常");
       }
+      
       this.load=false;
     },
     dev(){
