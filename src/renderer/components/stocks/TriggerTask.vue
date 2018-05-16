@@ -158,7 +158,7 @@ export default {
         );
         //console.log(join);
         if (join.code === 0) {
-          await this.sleep(180 * 1e3); // 改成三分钟
+          await this.sleep((parseInt(join.data.time)+60) * 1e3); // 额外等待一分钟
           let notice = await api.send(
             "activity/v1/Raffle/notice",
             { roomid, raffleId },
