@@ -21,6 +21,17 @@
               </el-col>
             </el-row>
         </el-collapse-item>
+        
+        <el-collapse-item name="银瓜子换硬币" title="银瓜子换硬币">
+            <el-row :gutter="20">
+              <el-col :span="16">
+                  <el-tag type="warning">上次运行时间: {{Silver2Coin.LastRun}}</el-tag>
+              </el-col>
+              <el-col :span="8">
+                  <el-button type="success" size="small" @click="runSilver2Coin">手动执行</el-button>
+              </el-col>
+            </el-row>
+        </el-collapse-item>
 
 
         <el-collapse-item name="批量更新cookies" title="批量更新cookies">
@@ -58,6 +69,9 @@ export default {
       SilverBox: {
         LastRun: "无"
       },
+      Silver2Coin:{
+        LastRun: "无",
+      },
       HeartBeat: {
         LastRun: "无"
       },
@@ -78,6 +92,7 @@ export default {
         this.DailyTask(); //顺便做一下每日任务
         this.TuanSign(); //应援团签到
         this.Silver(); //宝箱
+        this.runSilver2Coin();//银瓜子换硬币
       });
       this.$eve.on("HeartBeat", () => {
         this.KeepAlive();
@@ -85,6 +100,19 @@ export default {
       this.$eve.on("TowDayTick",()=>{
         this.RefreshToken();//更新token
       })
+    },
+    async getCoin(user){
+      let rq = await this.$api.use(user).send("pay/v1/Exchange/silver2coin",{platform:"pc"},"get");
+      this.$eve.emit("info",`${user.name} 银瓜子换硬币：${rq.msg}`);
+    },
+    async runSilver2Coin(){
+      this.Silver2Coin.LastRun = this.formatTime(); //更新最后执行时间
+
+      for (let user of this.$store.users) {
+        if (user.config.Silver2Coin && user.isLogin) {
+          this.getCoin(user);
+        }
+      }
     },
     async RefreshToken(){
       this.AutoRefreshToken.LastRun = this.formatTime();
@@ -253,9 +281,9 @@ export default {
 
       //每2天自动重新登录
       let SeveralDayTick = new CronJob(
-        "00 00 00 */2 * *",
+        "00 00 03 */2 * *",
         () => {
-          this.$eve.emit("TowDayTick"); // 触发dailyTick事件
+          this.$eve.emit("TowDayTick"); // 触发TowDayTick事件
         },
         null,
         true

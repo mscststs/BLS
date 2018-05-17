@@ -16,6 +16,11 @@
                     <el-switch v-model="scope.row.SilverBox" @change="HandleChanged"></el-switch>
                 </template>
             </el-table-column>
+            <el-table-column label="银瓜子换硬币">
+                <template slot-scope="scope">
+                    <el-switch v-model="scope.row.Silver2Coin" @change="HandleChanged"></el-switch>
+                </template>
+            </el-table-column>
             <el-table-column label="保持在线">
                 <template slot-scope="scope">
                     <el-switch v-model="scope.row.KeepAlive" @change="HandleChanged"></el-switch>
@@ -58,6 +63,7 @@ export default {
             //可配置项清单，由于不需要外部干预，所以不需要另外写了，直接写在堆里
             "DailySign",
             "SilverBox",
+            "Silver2Coin",
             "KeepAlive",
             "SmallTv",
             "Raffle",
