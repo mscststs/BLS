@@ -43,7 +43,15 @@ export default {
             this.$eve.on("giftCount",(user,name,number,type)=>{
                 this.CheckGiftName(name); //检查礼物类别，添加到列中
                 this.CheckUsergift(user,name,parseInt(number));
-                this.$refs.CountTable.doLayout();
+                
+            });
+            this.$eve.on("tabChanged",(name)=>{
+                //界面重排，防止挤在一起。
+                if(name=="统计中心"){
+                    setTimeout(()=>{
+                        this.$refs.CountTable.doLayout();
+                        },100);
+                }
             });
         },
         CheckGiftName(Giftname){

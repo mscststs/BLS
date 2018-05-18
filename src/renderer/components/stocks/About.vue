@@ -6,6 +6,7 @@
     </el-header>
     <el-main>
      <p>用于批量调度账号，进行操作</p>
+     <p>本项目托管于  <a style="color:blue" @click="open('https://github.com/mscststs/BLS')">mscststs@github/BLS</a> ，如有问题反馈请提交issue.</p>
      <p>感谢: 使用了  <a style="color:blue" @click="open('https://github.com/pandaGao/bilibili-live/blob/master/src/service/room/danmaku/')">pandaGao@github</a> 的websocket的相关代码，基于MIT协议</p>
      <p>感谢: 使用了  <a style="color:blue" @click="open('https://github.com/lzghzr/bilive_client')">lzghzr@github</a> 的客户端api部分，基于MIT协议</p>
      <el-form style="margin-top:30px;" inline>
@@ -73,6 +74,11 @@ export default {
       shell.openExternal(this.nv.nvurl);
     },
     async checkUpdate(){
+      if(this.version.indexOf("beta")>=0){
+        //当前为测试版
+        this.$eve.emit("error","当前为测试版！不支持检查更新");
+        return;
+      }
       this.load=true;
       try{
         let qs = await rq({
