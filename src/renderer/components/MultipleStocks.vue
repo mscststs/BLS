@@ -74,6 +74,7 @@ export default {
     resetIndex(panel){
       /* 此处有一个注意点，Tab组件的value属性并非双向绑定，必须添加tab-click事件为value做重新赋值！ */
       this.selected = panel.name;
+      this.$eve.emit("tabChanged",panel.name);
     },
     addListener(){
       this.$eve.on("selectTab",(name)=>{

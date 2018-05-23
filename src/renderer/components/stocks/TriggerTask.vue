@@ -158,7 +158,7 @@ export default {
         );
         //console.log(join);
         if (join.code === 0) {
-          await this.sleep((parseInt(join.data.time)+60) * 1e3); // 额外等待一分钟
+          await this.sleep(180 * 1e3); // 等待三分钟
           let notice = await api.send(
             "activity/v1/Raffle/notice",
             { roomid, raffleId },
@@ -215,18 +215,26 @@ export default {
           .use(user)
           .send("gift/v3/smalltv/join", { roomid, raffleId }, "get");
         if (join.code === 0) {
-          let Time = join.data.time + 60;
+          let Time = join.data.time;
           await this.sleep(Time * 1e3);
-          let notice = await this.$api
-            .use(user)
-            .send("gift/v3/smalltv/notice", { type, raffleId }, "get");
-          if (notice.code === 0) {
-            let giftnum = notice.data.gift_num;
-            let giftname = notice.data.gift_name;
-            this.$eve.emit("giftCount", user.name, giftname, giftnum,"小电视抽奖"); //提交统计
-          }else{
-              this.$eve.emit("info",`${user.name} 获取小电视结果：${notice.msg}`);
-          }
+          let  FaultRetry=5;
+          do{
+              await this.sleep(60 * 1e3);
+              let notice = await this.$api
+                .use(user)
+                .send("gift/v3/smalltv/notice", { type, raffleId }, "get");
+              if (notice.code === 0 && notice.data.gift_num!=0) {
+                let giftnum = notice.data.gift_num;
+                let giftname = notice.data.gift_name;
+                this.$eve.emit("giftCount", user.name, giftname, giftnum,"小电视抽奖"); //提交统计
+                break;
+              }else if(notice.code != 0){
+                this.$eve.emit("info",`${user.name} 获取小电视结果：${notice.msg}`);
+                break;
+              }else{
+                continue;
+              }
+            }while(FaultRetry--);
         }else{
               this.$eve.emit("info",`${user.name} 参加小电视抽奖：${join.msg}`);
             }
