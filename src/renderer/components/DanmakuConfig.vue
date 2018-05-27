@@ -44,11 +44,13 @@
           <p>{{info[2]}}</p>
         </div>
       </div>
+      <danmaku-multiadds></danmaku-multiadds>
   </div>
 </template>
 <script>
 /* 弹幕服务逻辑 */
 import DmService from "~/tools/danmaku";
+import DanmakuMultiadds from "@/components/DanmakuAddons/DanmakuMultiadds.vue";
 
 export default {
   name: "DanmakuConfig",
@@ -72,6 +74,9 @@ export default {
     validateRoom() {
       return /^\d{1,}/.test(this.room.roomid);
     }
+  },
+  components:{
+    DanmakuMultiadds,
   },
   mounted() {
     this.addListener();
@@ -157,9 +162,13 @@ export default {
             this.$eve.emit("dm_chat", data);
             break;
           case "SYS_MSG":
-            /* 绘马没有roomid参数 */
+            /* 绘马没有roomid参数，小电视+摩天大楼等绿色通知 */
             if(data.roomid){
-             this.$eve.emit("dm_SmallTv", data);
+              if(data.msg.indexOf("小电视")){
+                //仅提取小电视
+                this.$eve.emit("dm_SmallTv", data);
+              }
+             //console.log(data);
             }
             break;
           case "SYS_GIFT":
@@ -188,7 +197,7 @@ export default {
   width: 100%;
   position: relative;
   height: 55px;
-  background-color: rgba(0, 122, 204, 0.1);
+  background-color: rgb(229, 241, 250);
   box-shadow: 0px 0 6px 0 #aaa inset;
 }
 .roominfo {
