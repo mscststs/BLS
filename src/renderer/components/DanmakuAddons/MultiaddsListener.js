@@ -8,6 +8,35 @@ class dm {
         this.status = false;
         this.roomid = 0;
         this.dm = {};
+        setTimeout(()=>{
+            //每隔5分钟检查一次当前主播是否还在该分区
+            if(this.status){
+                CheckInType(this.roomid);
+            }
+        },5*60e3);
+    }
+    async CheckInType(roomid){
+        let flag = false;
+        let rq = await api.send("room/v1/area/getRoomList", {
+            platform: "web",
+            parent_area_id: this.type,
+            sort_type: "online",
+            page_size: "30",
+        }, "get");
+
+        //检查签前30热度的是否还有该主播
+
+        for(let r of rq.data){
+            if(r.roomid==roomid){
+                flag = true;
+            }
+        }
+
+        if(!flag){
+            eve.emit("info","检测到分区/房间热度变化，自动重新选择房间");
+            this.disconnect();
+            this.connect();
+        }
     }
     async connect() {
         if (Object.keys(this.dm).length && this.dm._socket) {
@@ -48,7 +77,8 @@ class dm {
                     break;
                 case "online":
                     //eve.emit("dm_online", data);
-                    if(data.type!="online"){
+                    if(data.type!="online"||data.number==0){
+                        //number为0时即为下播
                         this.disconnect();
                         this.connect();
                         //当直播下线时自动切换到其他主播

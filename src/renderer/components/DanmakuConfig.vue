@@ -138,7 +138,7 @@ export default {
 
       this.$store.DanmakuRoom = short_id;
 
-      if (Object.keys(this.dm).length && this._socket) {
+      if (Object.keys(this.dm).length && this.dm._socket) {
         /* 防止多个socket并存 */
         this.dm.disconnect();
         this.dm = {};
@@ -163,7 +163,7 @@ export default {
           case "SYS_MSG":
             /* 绘马没有roomid参数，小电视+摩天大楼等绿色通知 */
             if (data.roomid) {
-              if (data.msg.indexOf("小电视")) {
+              if (data.msg.indexOf("小电视")>=0) {
                 //仅提取小电视
                 this.$eve.emit("dm_SmallTv", data);
               }
