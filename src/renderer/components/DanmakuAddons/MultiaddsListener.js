@@ -11,7 +11,7 @@ class dm {
         setTimeout(()=>{
             //每隔5分钟检查一次当前主播是否还在该分区
             if(this.status){
-                CheckInType(this.roomid);
+                this.CheckInType(this.roomid);
             }
         },5*60e3);
     }
