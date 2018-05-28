@@ -75,8 +75,8 @@ export default {
       return /^\d{1,}/.test(this.room.roomid);
     }
   },
-  components:{
-    DanmakuMultiadds,
+  components: {
+    DanmakuMultiadds
   },
   mounted() {
     this.addListener();
@@ -134,8 +134,7 @@ export default {
       }
       roomid = rq.data.room_id;
 
-
-      let short_id = rq.data.short_id||rq.data.room_id;
+      let short_id = rq.data.short_id || rq.data.room_id;
 
       this.$store.DanmakuRoom = short_id;
 
@@ -163,12 +162,12 @@ export default {
             break;
           case "SYS_MSG":
             /* 绘马没有roomid参数，小电视+摩天大楼等绿色通知 */
-            if(data.roomid){
-              if(data.msg.indexOf("小电视")){
+            if (data.roomid) {
+              if (data.msg.indexOf("小电视")) {
                 //仅提取小电视
                 this.$eve.emit("dm_SmallTv", data);
               }
-             //console.log(data);
+              //console.log(data);
             }
             break;
           case "SYS_GIFT":
@@ -179,6 +178,7 @@ export default {
             break;
           case "online":
             this.$eve.emit("dm_online", data);
+            //console.log(data);
             break;
           case "gift":
             this.$eve.emit("dm_gift", data);
