@@ -77,7 +77,7 @@ class dm {
                     break;
                 case "online":
                     //eve.emit("dm_online", data);
-                    if(data.type!="online"||data.number==0){
+                    if(data.type!="online"||data.number<=10){
                         //number为0时即为下播
                         this.disconnect();
                         this.connect();
@@ -87,6 +87,12 @@ class dm {
                     //console.log(data);
                     break;
                 case "gift":
+                    break;
+                case "ROOM_SILENT_OFF":
+                    this.disconnect();
+                    this.connect();
+                    //当直播下线时自动切换到其他主播
+                    eve.emit("info","检测到下播，自动切换其他房间 ...");
                     break;
                 default:
                     break;
