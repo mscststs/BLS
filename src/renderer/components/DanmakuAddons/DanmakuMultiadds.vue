@@ -54,7 +54,7 @@ export default {
     },
     mounted(){
         for(let s of this.Square){
-            s.dm = new dm(s.type);
+            s.dm = new dm(s.type,s.name);
             s.dm.connect();
         }
     },
@@ -100,8 +100,8 @@ export default {
         color:#fff;
     }
     .square{
-        display: inline-block;
         float: left;
+        display: block;
         margin: 0 10px;
         box-shadow: 0 -5px 7px rgba(0,0,0,0.3);
         padding: 7px 15px;

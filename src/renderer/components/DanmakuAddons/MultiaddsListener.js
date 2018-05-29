@@ -3,19 +3,19 @@ import api from "~/tools/api";
 import eve from  "~/tools/events"
 
 class dm {
-    constructor(type) {
+    constructor(type,name) {
+        this.name = name;
         this.type = type;
         this.status = false;
         this.roomid = 0;
         this.dm = {};
-        setTimeout(()=>{
-            //每隔5分钟检查一次当前主播是否还在该分区
+        eve.on("HeartBeat",()=>{
             if(this.status){
-                this.CheckInType(this.roomid);
+                this.CheckInType();
             }
-        },5*60e3);
+        })
     }
-    async CheckInType(roomid){
+    async CheckInType(){
         let flag = false;
         let rq = await api.send("room/v1/area/getRoomList", {
             platform: "web",
@@ -27,15 +27,17 @@ class dm {
         //检查签前30热度的是否还有该主播
 
         for(let r of rq.data){
-            if(r.roomid==roomid){
+            if(r.roomid==this.roomid){
                 flag = true;
             }
         }
 
         if(!flag){
-            eve.emit("info","检测到分区/房间热度变化，自动重新选择房间");
+            eve.emit("info",this.name + "分区检测 ：检测到房间分区/房间热度变化，自动重新选择房间");
             this.disconnect();
             this.connect();
+        }else{
+            eve.emit("info",this.name + "分区检测 ：房间分区正常");
         }
     }
     async connect() {
@@ -51,13 +53,12 @@ class dm {
         });
         this.dm.on("connected", () => {
             this.status = true;
-            eve.emit("success", `直播间 ${roomid} 连接成功`);
+            eve.emit("success", `${this.name}分区： 直播间 ${roomid} 连接成功`);
         });
         this.dm.connect();
         this.dm.on("data", data => {
             switch (data.type) {
                 case "comment":
-                    //eve.emit("dm_chat", data);
                     break;
                 case "SYS_MSG":
                     /* 绘马没有roomid参数，小电视+摩天大楼等绿色通知 */
@@ -70,19 +71,15 @@ class dm {
                     }
                     break;
                 case "SYS_GIFT":
-                    /* if (data.roomid) {
-                        
-                        eve.emit("dm_raffle", data);
-                    } */
+
                     break;
                 case "online":
-                    //eve.emit("dm_online", data);
                     if(data.type!="online"||data.number<=10){
                         //number为0时即为下播
                         this.disconnect();
                         this.connect();
                         //当直播下线时自动切换到其他主播
-                        eve.emit("info","检测到下播，自动切换其他房间 ...");
+                        eve.emit("info",`${this.name}分区： 检测到下播，自动切换其他房间 ...`);
                     }
                     //console.log(data);
                     break;
@@ -92,7 +89,7 @@ class dm {
                     this.disconnect();
                     this.connect();
                     //当直播下线时自动切换到其他主播
-                    eve.emit("info","检测到下播，自动切换其他房间 ...");
+                    eve.emit("info",`${this.name}分区： 检测到下播，自动切换其他房间 ...`);
                     break;
                 default:
                     break;
