@@ -108,7 +108,14 @@ class dm {
             sort_type: "online",
             page_size: "30",
         }, "get");
-        let rooms = rq.data;
+        let rooms =[];
+        for(let r of rq.data){
+            if(r.roomid==this.roomid){
+            }else{
+                rooms.push(r);
+            }
+        }
+        //取出非当前直播间的另一个直播间（热度更新有延迟）
 
         rooms.sort((a, b) => { return b.online - a.online });
         return rooms[0].roomid; //返回人气最高的房间ID
