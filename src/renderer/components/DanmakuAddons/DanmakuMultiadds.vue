@@ -3,10 +3,10 @@
 
         <div class="square" v-for="s in Square" :key="s.name" v-show="Expand.ex">
             <div class="square-title">
-                {{s.name}}
+                {{s.name}}<el-switch v-model="s.dm.allow" style="margin:-5px 5px 0px 5px;"></el-switch>
             </div>
             <div class="square-status">
-                <span class="square-status-roomid">{{s.dm.roomid}}</span>{{s.dm.status?"已连接":"已断开"}}
+                <span class="square-status-roomid">{{s.dm.roomid}}</span>{{s.dm.allow?s.dm.status?"已连接":"已断开":"不监听"}}
             </div>
             
         </div>
@@ -24,6 +24,7 @@ export default {
     name:"DanmakuMultiadds",
     data(){
         return{
+            allow:false,
             Expand:{
                 ex:false,
                 icon : "el-icon-d-arrow-right"
@@ -59,6 +60,9 @@ export default {
         }
     },
     methods:{
+        Addlistener(){
+            
+        },
         expandPanel(){
             this.Expand.ex = !this.Expand.ex;
             this.Expand.icon=!this.Expand.ex?"el-icon-d-arrow-right":"el-icon-d-arrow-left";

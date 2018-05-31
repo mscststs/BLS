@@ -9,6 +9,7 @@ class dm {
         this.status = false;
         this.roomid = 0;
         this.dm = {};
+        this.allow = true;
         eve.on("HeartBeat",()=>{
             if(this.status){
                 this.CheckInType();
@@ -65,7 +66,9 @@ class dm {
                     if (data.roomid) {
                         if (data.msg.indexOf("摩天大楼")>=0) {
                             //仅提取摩天大楼
-                            eve.emit("dm_SmallTv", data);
+                            if(this.allow){
+                                eve.emit("dm_SmallTv", data);
+                            }
                         }
                         //console.log(data);
                     }
@@ -98,6 +101,7 @@ class dm {
 
     }
     disconnect() {
+        this.status = false;
         this.dm.disconnect();
         this.dm = {};
     }
