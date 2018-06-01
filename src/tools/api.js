@@ -90,7 +90,8 @@ export default new class{
                             }
                             return res;
                         }
-                    }).catch(()=>{
+                    }).catch((e)=>{
+                        
                         if(retry < RETRY_LIMIT){
                             return this.send(url,data,method,baseURL,retry+1);
                         }
@@ -101,6 +102,10 @@ export default new class{
                     let jar = new rq.jar();
                     let domain = options.uri.match(/https?:\/\/([^\/]+)/i)[0];
                     domain = domain.substr(domain.indexOf(":")+3,1000);
+                    if( !(this.cookies&&this.cookies.cookies)){
+                        //console.log(options);
+                        throw new Error(`${this.user.name} cookies不存在`);
+                    }
                     for(let ck of this.cookies.cookies){
                         let cookie = new tough.Cookie({
                             key: ck.name,
