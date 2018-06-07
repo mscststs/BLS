@@ -22,6 +22,9 @@
       <el-tab-pane label="调度响应" name="调度响应">
         <response-center></response-center>
       </el-tab-pane>
+      <el-tab-pane label="小黑屋回避" name="小黑屋回避">
+        <blackroom-block></blackroom-block>
+      </el-tab-pane>
       <el-tab-pane label="关于" name="关于">
         <about></about>
       </el-tab-pane>
@@ -39,6 +42,7 @@ import IntervalTask from "@/components/stocks/IntervalTask"
 import TriggerTask from "@/components/stocks/TriggerTask"
 import Mock from "@/components/stocks/Mock"
 import CountCenter from "@/components/stocks/CountCenter"
+import BlackroomBlock from "@/components/stocks/BlackroomBlock"
 
 export default {
   name:"MultipleStocks",
@@ -52,6 +56,7 @@ export default {
           "触发任务",
           "统计中心",
           "调度响应",
+          "小黑屋回避",
           "关于",
         ],
         selected:"自定义",
@@ -65,6 +70,7 @@ export default {
     TriggerTask, //触发任务
     CountCenter, //统计中心
     ResponseCenter, //调度响应
+    BlackroomBlock,
     About, //关于
   },
   mounted(){

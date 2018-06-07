@@ -95,7 +95,7 @@ export default {
       });
       this.$eve.on("HeartBeat", () => {
         this.KeepAlive();
-      });
+      },-10);
       this.$eve.on("TowDayTick", () => {
         this.RefreshToken(); //更新token
       });

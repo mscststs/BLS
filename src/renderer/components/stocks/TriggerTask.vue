@@ -64,14 +64,14 @@ export default {
           this.smalltv(data);
         });
         
-      });
+      },-10);
       this.$eve.on("dm_raffle", data => {
         // console.log(data);
         this.Checkfish(data, () => {
           this.appraffle(data);
           this.raffle(data);
         });
-      });
+      },-10);
     },
     async Checkfish(data, cb) {
       let roomid = data.roomid;
