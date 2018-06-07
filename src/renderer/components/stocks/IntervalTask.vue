@@ -278,11 +278,15 @@ export default {
     GloBalTimeStampes() {
       /* 负责在初始化之后提供全局计时事件 */
       setTimeout(() => {
-        this.$eve.emit("dailyTick");
+          this.Sign();
+          this.DailyTask(); //顺便做一下每日任务
+          this.TuanSign(); //应援团签到
+          //this.Silver(); //宝箱
+          this.runSilver2Coin(); //银瓜子换硬币
       }, 10e3); //载入10秒后提交一个dailyTick
       /* 使用cron进行定时任务,每天凌晨1点emit一个dailyTick事件 */
       let dailyjob = new CronJob(
-        "00 00 01 * * *",
+        "00 00 12 * * *",
         () => {
           this.$eve.emit("dailyTick"); // 触发dailyTick事件
         },
