@@ -114,7 +114,6 @@ export default {
             });
         },
         HeatResolve(data){
-            console.log("???");
             if(data.msg.indexOf("小电视")>=0){
                 //小电视
                 this.Heatmark(this.count.smalltv)
@@ -127,7 +126,6 @@ export default {
             }
         },
         Heatmark(type){
-            console.log("~!!!");
             let da = new Date();
             let NowHour = da.getHours();
             let date =da.getDate();
