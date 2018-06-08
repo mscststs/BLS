@@ -8,7 +8,6 @@ import events from "~/tools/events.js"
 import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
 
-import echarts from 'echarts'
 
 
 
@@ -17,7 +16,6 @@ Vue.config.productionTip = false
 
 Vue.use(ElementUI)
 
-Vue.prototype.$echarts = echarts 
 
 Vue.prototype.$api = api
 Vue.prototype.$eve = events
