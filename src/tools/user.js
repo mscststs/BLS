@@ -155,7 +155,7 @@ class user {
         }
         this.token = token_data.token_info;
         this.cookies = token_data.cookie_info;
-        this.isLogin = true;
+        this.isLogin = token_data.status==1?false:true;
     }
 
     async Login(po=false) {//static用于指定是否强制更新，强制更新用于修改了某些值之后需要更新

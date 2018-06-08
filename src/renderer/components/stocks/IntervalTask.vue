@@ -69,16 +69,15 @@ export default {
       SilverBox: {
         LastRun: "无"
       },
-      Silver2Coin:{
-        LastRun: "无",
+      Silver2Coin: {
+        LastRun: "无"
       },
       HeartBeat: {
         LastRun: "无"
       },
-      AutoRefreshToken:{
-        LastRun:"无"
-      },
-
+      AutoRefreshToken: {
+        LastRun: "无"
+      }
     };
   },
   mounted() {
@@ -92,20 +91,22 @@ export default {
         this.DailyTask(); //顺便做一下每日任务
         this.TuanSign(); //应援团签到
         this.Silver(); //宝箱
-        this.runSilver2Coin();//银瓜子换硬币
+        this.runSilver2Coin(); //银瓜子换硬币
       });
       this.$eve.on("HeartBeat", () => {
         this.KeepAlive();
+      },-10);
+      this.$eve.on("TowDayTick", () => {
+        this.RefreshToken(); //更新token
       });
-      this.$eve.on("TowDayTick",()=>{
-        this.RefreshToken();//更新token
-      })
     },
-    async getCoin(user){
-      let rq = await this.$api.use(user).send("pay/v1/Exchange/silver2coin",{platform:"pc"},"get");
-      this.$eve.emit("info",`${user.name} 银瓜子换硬币：${rq.msg}`);
+    async getCoin(user) {
+      let rq = await this.$api
+        .use(user)
+        .send("pay/v1/Exchange/silver2coin", { platform: "pc" }, "get");
+      this.$eve.emit("info", `${user.name} 银瓜子换硬币：${rq.msg}`);
     },
-    async runSilver2Coin(){
+    async runSilver2Coin() {
       this.Silver2Coin.LastRun = this.formatTime(); //更新最后执行时间
 
       for (let user of this.$store.users) {
@@ -114,13 +115,13 @@ export default {
         }
       }
     },
-    async RefreshToken(){
+    async RefreshToken() {
       this.AutoRefreshToken.LastRun = this.formatTime();
-      for(let user of this.$store.users){
+      for (let user of this.$store.users) {
         await user.RefreshToken();
-      };
+      }
     },
-    BtnClick_Sign(){
+    BtnClick_Sign() {
       //手动触发每日签到
       this.Sign();
       this.DailyTask(); //顺便做一下每日任务
@@ -139,18 +140,22 @@ export default {
         this.$store.DanmakuRoom
       }`; //设置referer
       let pc = await it.send("User/userOnlineHeart", {}, "post");
-      it.origin({
-        /* APP端心跳 */
-        uri: `https://api.live.bilibili.com/mobile/userOnlineHeart`,
-        qs: user.SignWithBasicQuery({
-          access_key: user.token.access_token
-        }),
-        form: {
-          room_id: this.$store.DanmakuRoom,
-          scale: "xxhdpi"
-        },
-        method: "post"
-      });
+      try {
+        it.origin({
+          /* APP端心跳 */
+          uri: `https://api.live.bilibili.com/mobile/userOnlineHeart`,
+          qs: user.SignWithBasicQuery({
+            access_key: user.token.access_token
+          }),
+          form: {
+            room_id: this.$store.DanmakuRoom,
+            scale: "xxhdpi"
+          },
+          method: "post"
+        });
+      } catch (e) {
+        this.$eve.emit("error", e.message);
+      }
     },
     KeepAlive() {
       this.HeartBeat.LastRun = this.formatTime(); //更新最后执行时间
@@ -199,52 +204,59 @@ export default {
     DailyTask() {
       for (let user of this.$store.users) {
         if (user.isLogin) {
-          this.$api
+          try {
+            this.$api
             .use(user)
             .send(
               "activity/v1/task/receive_award",
               { task_id: "double_watch_task" },
               "post"
             );
+          } catch (error) {
+            this.$eve.emit("error",error.message);
+          }
+          
         }
       }
     },
-    async userTuanSign(user){
-        try{
-            let list  = await this.$api.use(user).origin(
-              {
-                uri:"https://api.vc.bilibili.com/link_group/v1/member/my_groups",
-                qs:user.SignWithBasicQuery({
-                    access_key: user.token.access_token
-                  }),
-                method:"get",
+    async userTuanSign(user) {
+      try {
+        let list = await this.$api.use(user).origin({
+          uri: "https://api.vc.bilibili.com/link_group/v1/member/my_groups",
+          qs: user.SignWithBasicQuery({
+            access_key: user.token.access_token
+          }),
+          method: "get"
+        });
+        if (list.code === 0) {
+          for (let group of list.data.list) {
+            let sign = await this.$api.use(user).origin({
+              uri:
+                "https://api.vc.bilibili.com/link_setting/v1/link_setting/sign_in",
+              qs: user.SignWithBasicQuery({
+                group_id: group.group_id,
+                owner_id: group.owner_uid,
+                access_key: user.token.access_token
+              }),
+              method: "get"
             });
-            if(list.code===0){
-                for(let group of list.data.list){
-                    let sign = await this.$api.use(user).origin(
-                      {
-                        uri:"https://api.vc.bilibili.com/link_setting/v1/link_setting/sign_in",
-                        qs:user.SignWithBasicQuery({
-                            group_id:group.group_id,
-                            owner_id:group.owner_uid,
-                            access_key: user.token.access_token,
-                        }),
-                        method:"get",
-                    });
-                    this.$eve.emit("info",`${user.name} 应援团 [ ${group.group_name} ] 签到 :${sign.msg}`);
-                    //发送请求即可
-                }
-            }
-        }catch(e){
-            this.$eve.emit("info",`${user.name} 应援团签到时: ${e.message}`);
+            this.$eve.emit(
+              "info",
+              `${user.name} 应援团 [ ${group.group_name} ] 签到 :${sign.msg}`
+            );
+            //发送请求即可
+          }
         }
+      } catch (e) {
+        this.$eve.emit("info", `${user.name} 应援团签到时: ${e.message}`);
+      }
     },
     TuanSign() {
-        for(let user of this.$store.users){
-            if(user.config.DailySign && user.isLogin){
-                this.userTuanSign(user);
-            }
+      for (let user of this.$store.users) {
+        if (user.config.DailySign && user.isLogin) {
+          this.userTuanSign(user);
         }
+      }
     },
     async Sign() {
       this.DailySign.LastRun = this.formatTime(); //更新最后运行时间
@@ -266,11 +278,15 @@ export default {
     GloBalTimeStampes() {
       /* 负责在初始化之后提供全局计时事件 */
       setTimeout(() => {
-        this.$eve.emit("dailyTick");
+          this.Sign();
+          this.DailyTask(); //顺便做一下每日任务
+          this.TuanSign(); //应援团签到
+          //this.Silver(); //宝箱
+          this.runSilver2Coin(); //银瓜子换硬币
       }, 10e3); //载入10秒后提交一个dailyTick
       /* 使用cron进行定时任务,每天凌晨1点emit一个dailyTick事件 */
       let dailyjob = new CronJob(
-        "00 00 01 * * *",
+        "00 00 12 * * *",
         () => {
           this.$eve.emit("dailyTick"); // 触发dailyTick事件
         },
@@ -352,5 +368,4 @@ export default {
 };
 </script>
 <style scoped>
-
 </style>

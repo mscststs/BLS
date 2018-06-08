@@ -8,11 +8,17 @@ import events from "~/tools/events.js"
 import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
 
+import echarts from 'echarts'
+
+
 
 if (!process.env.IS_WEB) Vue.use(require('vue-electron'))
 Vue.config.productionTip = false
 
 Vue.use(ElementUI)
+
+Vue.prototype.$echarts = echarts 
+
 Vue.prototype.$api = api
 Vue.prototype.$eve = events
 Vue.prototype.$store = new store(window.localStorage,"bls-config");

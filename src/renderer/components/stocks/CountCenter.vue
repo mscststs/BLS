@@ -30,9 +30,8 @@ export default {
             let dailyjob = new CronJob(
                 "00 00 00 * * *",
                 () => {
-                    //每天凌晨0点清空
-                    this.types = [];
-                    this.userGifts = [];
+                    this.$eve.emit("ZeroClear");
+                    //每天凌晨0点发出清空信号
                 },
                 null,
                 true
@@ -50,8 +49,12 @@ export default {
                 if(name=="统计中心"){
                     setTimeout(()=>{
                         this.$refs.CountTable.doLayout();
-                        },100);
+                    },100);
                 }
+            });
+            this.$eve.on("ZeroClear",()=>{
+                this.types = [];
+                this.userGifts = [];
             });
         },
         CheckGiftName(Giftname){
