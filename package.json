@@ -25,9 +25,9 @@
     "files": [
       "dist/electron/**/*"
     ],
-    "nsis":{
-      "oneClick":false,
-      "allowToChangeInstallationDirectory":true
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
     },
     "dmg": {
       "contents": [
@@ -56,6 +56,8 @@
   },
   "dependencies": {
     "cron": "^1.3.0",
+    "echarts": "^4.1.0",
+    "electron": "^2.0.2",
     "element-ui": "^2.2.0",
     "lodash": "^4.17.5",
     "request": "^2.83.0",
