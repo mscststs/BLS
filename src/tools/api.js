@@ -1,6 +1,7 @@
-import rq from "request-promise-native"
-import tough from "tough-cookie"
-import eve from "~/tools/events.js"
+import rq from "request-promise-native";
+import tough from "tough-cookie";
+import eve from "~/tools/events.js";
+import proxyAgent from "proxy-agent";
 
 const RETRY_LIMIT=5; //重试次数
 function  sleep(ms){
@@ -32,6 +33,10 @@ export default new class{
         this.baseURL = `https://api.live.bilibili.com/`;
         this.ts = 0;
         this.thread = 0;
+        this.Agent = {
+            status :false,
+            Agent:{},
+        }
     }
     regist(url,name){ //注册快捷调用
         if(!this.FuckList){
@@ -61,6 +66,7 @@ export default new class{
                 cookies:user.cookies,
                 FuckList:this.FuckList,
                 baseURL:this.baseURL,
+                Agent:this.Agent,
                 fuck:function(key,...data){
                     let Fuckurl  = "";
                     for(let {url,name} of this.FuckList){
@@ -117,7 +123,13 @@ export default new class{
                         jar.setCookie(cookie,options.uri);
                     }
                     options.jar = jar;
-                    
+
+                    if(this.Agent.status){
+                        //检查是否使用代理,仅对用户的连接使用代理
+                        options.agent = this.Agent.agent;
+                        options.timeout = 5000; //增加代理的延迟
+                    }
+
                     return this.ori_rq(options);;
                 }
             }
@@ -127,6 +139,37 @@ export default new class{
         }
     }
 
+    async TestAndSetProxy(proxyString){
+        //测试代理
+        let p = new proxyAgent(proxyString);
+        try{
+            let res = await this.origin({
+                uri:"https://api.live.bilibili.com/ip_service/v1/ip_service/get_ip_addr",
+                method:"get",
+                agent:p,
+            });
+            if(res.code == 0){
+                this.Agent = {
+                    agent : p,
+                    status:true,
+                } 
+                return {
+                    useful:true,
+                    rq:res
+                }
+            }else{
+                throw new Error("查询IP时返回值不为0");
+            }
+        }
+        catch(e){
+            eve.emit("error",e.message);
+            return {
+                useful:false,
+            }
+        }
+        
+       
+    }
     /* 使用原始request */
     // async 的函数实际上是promise和genarate的语法糖，在于其可以继续被.then链处理,可以经过普通函数传递
     // 在写这一部分的时候对promise更深有感触，只要在端到端使用await/then,不管中间是经由普通函数还是async函数
@@ -148,12 +191,16 @@ export default new class{
         this.thread++;
         let res;
         try{
+
+            /*正式执行request*/
+
             res = await rq(options);//必须返回request-promise模块的promise
             //必须放置在try块中，否则会抛出错误导致thread死锁
             if(isJSON(res)){
                 res = JSON.parse(res);
             }
         }catch(e){
+            console.log(e);
             throw e;
         }finally{
             this.thread--;

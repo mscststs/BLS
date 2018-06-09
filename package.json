@@ -1,6 +1,6 @@
 {
   "name": "bls",
-  "version": "0.0.16",
+  "version": "0.0.17",
   "author": "十字 <mscststs@qq.com>",
   "description": "Bilibili Live Super",
   "license": null,
@@ -59,6 +59,7 @@
     "echarts": "^4.1.0",
     "element-ui": "^2.2.0",
     "lodash": "^4.17.5",
+    "proxy-agent": "^3.0.0",
     "request": "^2.83.0",
     "request-promise-native": "^1.0.5",
     "string_decoder": "^1.0.3",
@@ -68,7 +69,6 @@
     "ws": "^4.0.0"
   },
   "devDependencies": {
-    "electron": "^2.0.2",
     "babel-core": "^6.25.0",
     "babel-loader": "^7.1.1",
     "babel-plugin-transform-runtime": "^6.23.0",
@@ -83,6 +83,7 @@
     "css-loader": "^0.28.4",
     "del": "^3.0.0",
     "devtron": "^1.4.0",
+    "electron": "^2.0.2",
     "electron-builder": "^19.19.1",
     "electron-debug": "^1.4.0",
     "electron-devtools-installer": "^2.2.0",

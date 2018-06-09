@@ -25,6 +25,9 @@
       <el-tab-pane label="小黑屋回避" name="小黑屋回避">
         <blackroom-block></blackroom-block>
       </el-tab-pane>
+      <el-tab-pane label="代理设置" name="代理设置">
+        <agent-proxy></agent-proxy>
+      </el-tab-pane>
       <el-tab-pane label="关于" name="关于">
         <about></about>
       </el-tab-pane>
@@ -43,6 +46,7 @@ import TriggerTask from "@/components/stocks/TriggerTask"
 import Mock from "@/components/stocks/Mock"
 import CountCenter from "@/components/stocks/CountCenter"
 import BlackroomBlock from "@/components/stocks/BlackroomBlock"
+import AgentProxy from "@/components/stocks/AgentProxy"
 
 export default {
   name:"MultipleStocks",
@@ -57,6 +61,7 @@ export default {
           "统计中心",
           "调度响应",
           "小黑屋回避",
+          "代理设置",
           "关于",
         ],
         selected:"自定义",
@@ -70,7 +75,8 @@ export default {
     TriggerTask, //触发任务
     CountCenter, //统计中心
     ResponseCenter, //调度响应
-    BlackroomBlock,
+    BlackroomBlock, //小黑屋回避
+    AgentProxy, //代理设置
     About, //关于
   },
   mounted(){
