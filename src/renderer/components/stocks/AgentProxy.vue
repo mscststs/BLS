@@ -118,6 +118,8 @@ export default {
               status: true
             };
           });
+        }else{
+            this.Settings.connect = false;
         }
       } else {
         //closed
