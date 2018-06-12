@@ -318,10 +318,10 @@ export default {
             let sec = this.getSeconds(time);
             for(let rg of this.BlockTimeList){
                 if(sec>=rg.min && sec <rg.max){
-                    return false;
+                    return true;
                 }
             }
-            return true;
+            return false;
         }
     },
 }
