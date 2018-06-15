@@ -127,7 +127,7 @@ export default new class{
                     if(this.Agent.status){
                         //检查是否使用代理,仅对用户的连接使用代理
                         options.agent = this.Agent.agent;
-                        options.timeout = 5000; //增加代理的延迟
+                        options.timeout = 10000; //增加代理的延迟
                     }
 
                     return this.ori_rq(options);;
