@@ -22,6 +22,21 @@
               </el-row>
           </el-collapse-item>
         </el-collapse>
+        <el-row :gutter="20" style="margin-top:20px;">
+            <el-col :span="4" style="line-height:38px">
+              随机丢弃(%)
+            </el-col>
+            <el-col :span="20">
+                  <el-slider
+                    v-model="dispite"
+                    show-input
+                    @change="DispiteUpdate">
+                  </el-slider>
+            </el-col>
+            <el-col :span="24" style="margin-top:5px;">
+              <el-alert type="info" :closable="false" title="">该项用于控制每次抽奖会被随机抛弃的概率</el-alert>
+            </el-col>
+        </el-row>
     </div>
 </template>
 
@@ -40,12 +55,29 @@ export default {
         Raffle_id: "无"
       },
       indiv:[],
+      dispite:5,
     };
   },
   mounted() {
     this.AddListener();
+    this.initDispite();
   },
   methods: {
+    DispiteUpdate(val){
+      if(val>=0&&val<=100){
+        this.$store.update(data=>{
+          data.LotteryDispite = val;
+        });
+      }
+    },
+    initDispite(){
+      if(this.$store.data.LotteryDispite){
+        this.dispite = this.$store.data.LotteryDispite;
+      }
+    },
+    NeedDispite(){
+      return Math.round(Math.random()*100) < this.dispite;
+    },
     isExsit(str){
       if(this.indiv.indexOf(str)>=0){
         return true;
@@ -100,6 +132,10 @@ export default {
 
     async getAppRaffle(event_type,room_id,user){
         try{
+            if(this.NeedDispite()){
+              this.$eve.emit("info",`${user.name} 丢弃了一个APP 抽奖, 抽奖编号：${raffleId}`);
+              return ;
+            }
             let join = await this.$api.use(user).send("YunYing/roomEvent",
             user.SignWithBasicQuery({
                 event_type,
@@ -149,6 +185,10 @@ export default {
     },
     async joinRaffle(roomid, raffleId, user) {
       try {
+        if(this.NeedDispite()){
+          this.$eve.emit("info",`${user.name} 丢弃了一个PC 抽奖, 抽奖编号：${raffleId}`);
+          return ;
+        }
         let api = this.$api.use(user);
         api.headers["Referer"] = `https://live.bilibili.com/${roomid}`;
         let join = await api.send(
@@ -211,6 +251,10 @@ export default {
     },
     async getSmallTv(roomid, raffleId, user,type) {
       try {
+        if(this.NeedDispite()){
+          this.$eve.emit("info",`${user.name} 丢弃了一个小电视抽奖, 抽奖编号：${raffleId}`);
+          return ;
+        }
         let join = await this.$api
           .use(user)
           .send("gift/v3/smalltv/join", { roomid, raffleId }, "get");
