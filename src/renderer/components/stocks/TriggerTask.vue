@@ -270,10 +270,6 @@ export default {
     },
     async getSmallTv(roomid, raffleId, user,type) {
       try {
-        if(this.NeedDispite()){
-          this.$eve.emit("info",`${user.name} 丢弃了一个小电视抽奖, 抽奖编号：${raffleId}`);
-          return ;
-        }
         let join = await this.$api
           .use(user)
           .send("gift/v3/smalltv/join", { roomid, raffleId }, "get");
@@ -307,10 +303,6 @@ export default {
     },
     async getSmallTv_v4(roomid, raffleId, user,type){
       try{
-        if(this.NeedDispite()){
-          this.$eve.emit("info",`${user.name} 丢弃了一个小电视抽奖, 抽奖编号：${raffleId}`);
-          return;
-        }
         let award =await this.$api
           .use(user)
           .origin({
@@ -352,6 +344,12 @@ export default {
             for (let user of this.$store.users) {
               if (user.config.SmallTv && user.isLogin) {
                 // console.log(roomid + " " + id);
+                if(this.NeedDispite()){
+                  //小电视抽奖丢弃提前，防止后面递归出现重复丢弃
+                  this.$eve.emit("info",`${user.name} 丢弃了一个小电视抽奖, 抽奖编号：${id}`);
+                  continue;
+                }
+
                 if(this.SmallTv_Use_V4){
                   //如果使用v4 API
                   this.getSmallTv_v4(roomid, id, user,type);
