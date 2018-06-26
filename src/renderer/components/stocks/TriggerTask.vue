@@ -3,20 +3,28 @@
         <el-collapse>
           <el-collapse-item name="小电视" title="小电视">
               <el-row>
-                <el-col :span="8">
+                <el-col :span="6">
                     <el-tag type="success">最近轮次: {{SmallTv.SmallTv_id}}</el-tag>
                 </el-col>
-                <el-col :span="8">
+                <el-col :span="6">
                     <el-tag type="success">最近房间: {{SmallTv.roomid}}</el-tag>
+                </el-col>
+                <el-col :span="12">
+                  <el-switch 
+                    v-model="SmallTv_Use_V4" 
+                    active-text="使用v4接口" 
+                    inactive-text="使用v3接口" 
+                    inactive-color="#dda541"
+                    @change="UpdateStoreApiVersion"></el-switch>
                 </el-col>
               </el-row>
           </el-collapse-item>
           <el-collapse-item name="高能" title="高能">
               <el-row>
-                <el-col :span="8">
+                <el-col :span="6">
                     <el-tag type="warning">最近轮次: {{Raffle.Raffle_id}}</el-tag>
                 </el-col>
-                <el-col :span="8">
+                <el-col :span="6">
                     <el-tag type="warning">最近房间: {{Raffle.roomid}}</el-tag>
                 </el-col>
               </el-row>
@@ -27,11 +35,11 @@
               随机丢弃(%)
             </el-col>
             <el-col :span="20">
-                  <el-slider
-                    v-model="dispite"
-                    show-input
-                    @change="DispiteUpdate">
-                  </el-slider>
+              <el-slider
+                v-model="dispite"
+                show-input
+                @change="DispiteUpdate">
+              </el-slider>
             </el-col>
             <el-col :span="24" style="margin-top:5px;">
               <el-alert type="info" :closable="false" title="">该项用于控制每次抽奖会被随机抛弃的概率</el-alert>
@@ -56,23 +64,34 @@ export default {
       },
       indiv:[],
       dispite:5,
+      SmallTv_Use_V4:false,
     };
   },
   mounted() {
     this.AddListener();
-    this.initDispite();
+    this.init();
   },
   methods: {
-    DispiteUpdate(val){
-      if(val>=0&&val<=100){
-        this.$store.update(data=>{
-          data.LotteryDispite = val;
-        });
-      }
+    UpdateStoreApiVersion(val){
+      this.$store.update(data=>{
+        if(!data.API_version){
+          data.API_version = {};
+        }
+        data.API_version.SmallTv_Use_V4 = val;
+      })
     },
-    initDispite(){
-      if(this.$store.data.LotteryDispite){
+    DispiteUpdate(val){
+      this.$store.update(data=>{
+        data.LotteryDispite = val;
+      });
+    },
+    init(){
+      if(this.$store.data.LotteryDispite||this.$store.data.LotteryDispite===0){
+        //当dispite可能等于0时，就不能用if来判断是不是已经定义，需要加上一条
         this.dispite = this.$store.data.LotteryDispite;
+      }
+      if(this.$store.data.API_version&&this.$store.data.API_version.SmallTv_Use_V4){
+        this.SmallTv_Use_V4 = this.$store.data.API_version.SmallTv_Use_V4;
       }
     },
     NeedDispite(){
@@ -286,6 +305,35 @@ export default {
         this.$eve.emit("info", `${user.name} 参与小电视抽奖时: ${e.message}`);
       }
     },
+    async getSmallTv_v4(roomid, raffleId, user,type){
+      try{
+        if(this.NeedDispite()){
+          this.$eve.emit("info",`${user.name} 丢弃了一个小电视抽奖, 抽奖编号：${raffleId}`);
+          return;
+        }
+        let award =await this.$api
+          .use(user)
+          .origin({
+            uri:"http://api.live.bilibili.com/gift/v4/smalltv/getAward",
+            form:user.SignWithBasicQuery({
+                raffleId,
+                roomid,
+                type,
+              }),
+            method:"post",
+          });
+        if(award.code == -401){
+          await this.sleep(20e3);
+          this.getSmallTv_v4(roomid, raffleId, user,type)
+        }else if(award.code == 0){
+          this.$eve.emit("giftCount",user.name,award.data.gift_name,award.data.gift_num,"小电视抽奖");
+        }else{
+          this.$eve.emit("info",`${user.name} 获取小电视结果：${award.msg}`)
+        }
+      }catch(e){
+        this.$eve.emit("info",`${user.name} 参与小电视抽奖时：${e.message}`);
+      }
+    },
     async smalltv(data) {
       let roomid = data.real_roomid;
       let rq = await this.$api.send("gift/v3/smalltv/check", { roomid }, "get");
@@ -304,7 +352,12 @@ export default {
             for (let user of this.$store.users) {
               if (user.config.SmallTv && user.isLogin) {
                 // console.log(roomid + " " + id);
-                this.getSmallTv(roomid, id, user,type);
+                if(this.SmallTv_Use_V4){
+                  //如果使用v4 API
+                  this.getSmallTv_v4(roomid, id, user,type);
+                }else{
+                  this.getSmallTv(roomid, id, user,type);
+                }
               }
             }
           }
