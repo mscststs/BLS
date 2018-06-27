@@ -33,6 +33,17 @@
             </el-row>
         </el-collapse-item>
 
+        <el-collapse-item name="自动送礼物" title="自动送礼物">
+            <el-row :gutter="20">
+              <el-col :span="16">
+                  <el-tag type="warning">上次运行时间: {{AutoGift.LastRun}}</el-tag>
+              </el-col>
+              <el-col :span="8">
+                  <el-button type="success" size="small" @click="runAutoGift">手动执行</el-button>
+              </el-col>
+            </el-row>
+        </el-collapse-item>
+
 
         <el-collapse-item name="批量更新cookies" title="批量更新cookies">
             <el-row :gutter="20">
@@ -72,6 +83,9 @@ export default {
       Silver2Coin: {
         LastRun: "无"
       },
+      AutoGift:{
+        LastRun: "无"
+      },
       HeartBeat: {
         LastRun: "无"
       },
@@ -92,6 +106,7 @@ export default {
         this.TuanSign(); //应援团签到
         this.Silver(); //宝箱
         this.runSilver2Coin(); //银瓜子换硬币
+        this.runAutoGift();//自动送礼物
       });
       this.$eve.on("HeartBeat", () => {
         this.KeepAlive();
@@ -112,6 +127,52 @@ export default {
       for (let user of this.$store.users) {
         if (user.config.Silver2Coin && user.isLogin) {
           this.getCoin(user);
+        }
+      }
+    },
+    async getRoomWeardMedal(user){
+      if(user.uid){
+        //从uid判断获取
+        let rmid = 0;
+        try{
+          let rm = await this.$api.use(user).send("live_user/v1/UserInfo/get_weared_medal",{
+            source: 1,
+            uid: user.uid,
+            target_id: user.uid,
+          },"post");
+          if(rm.code == 0){
+            if(rm.data && rm.data.id){
+              rmid = rm.data.roominfo.room_id;
+            }
+          }
+        }catch(e){
+          this.$eve.emit("info",`尝试获取 ${user.name} 的勋章时：${e.message} `);
+        }finally{
+          return rmid;
+        }
+        
+      }else{
+        this.$eve.emit("info",`触发了一个意料之外的错误，用户 ${user.name} 的uid未能初始化，重启程序或者更新cookies可以解决这个问题`);
+        this.$eve.emit("info","这个问题将可能影响到 ： 自动送礼物");
+        return 0;
+      }
+    },
+    async TrySendGift(user){
+      let room_id = await this.getRoomWeardMedal(user);
+      if(room_id){
+        //当前佩戴了 勋章
+
+        // TODO : 此处应当补上对应roomid的送礼物函数
+      }else{
+        // 未佩戴勋章 或出错
+        this.$eve.emit("warning",`${user.name} 打开了自动送礼物但是没有佩戴勋章 `);
+      }
+    },
+    async runAutoGift(){
+      this.AutoGift.LastRun = this.formatTime(); //更新最后执行时间
+      for(let user of this.$store.users){
+        if(user.config.AutoGift && user.isLogin){
+          this.TrySendGift(user);
         }
       }
     },
@@ -283,8 +344,9 @@ export default {
           this.TuanSign(); //应援团签到
           //this.Silver(); //宝箱
           this.runSilver2Coin(); //银瓜子换硬币
-      }, 10e3); //载入10秒后提交一个dailyTick
-      /* 使用cron进行定时任务,每天凌晨1点emit一个dailyTick事件 */
+          this.runAutoGift(); //自动送礼物
+      }, 10e3); //载入10秒后做一遍每日签到
+      /* 使用cron进行定时任务,每天12点emit一个dailyTick事件 */
       let dailyjob = new CronJob(
         "00 00 12 * * *",
         () => {

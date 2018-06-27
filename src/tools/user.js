@@ -18,6 +18,7 @@ class user {
 
 
         /* Global */
+        this.uid = 0;
         this.config = {};//为configCenter准备的插槽，这样其他的组件可以直接使用user.config.xxx而不会报错了
         this.name = name;
         this.store = store;
@@ -156,6 +157,27 @@ class user {
         this.token = token_data.token_info;
         this.cookies = token_data.cookie_info;
         this.isLogin = token_data.status==1?false:true;
+        if(this.isLogin) {
+            //二次检查
+            this.CheckUid();
+        }
+    }
+    async CheckUid(){
+        //获取用户UID，顺便确认登录成功
+        try{
+            let rq= await api.use(this).send("User/getUserInfo");
+            if(rq.code == "REPONSE_OK" ||rq.msg =="success" ){
+                this.uid = rq.data.uid;
+                //暂时只需要uid
+                this.isLogin = true;
+            }else{
+                this.isLogin = false;
+                eve.emit("userListUpdated");
+                //不可以使用valid事件，如果账号失效，会触发无限循环更新
+            }
+        }catch(e){
+            eve.emit("error",e.message);
+        }
     }
 
     async Login(po=false) {//static用于指定是否强制更新，强制更新用于修改了某些值之后需要更新

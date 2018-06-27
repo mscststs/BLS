@@ -1,9 +1,10 @@
 <template>
     <div class="config-center">
-        <el-table :data="config" stripe style="width:100%;">
+        <el-table :data="config" stripe style="width:100%;" :cell-style='{padding:"4px 0"}'>
           <el-table-column
                 prop="name"
                 label="昵称"
+                fixed
                 >
             </el-table-column>
             <el-table-column label="每日签到">
@@ -16,9 +17,14 @@
                     <el-switch v-model="scope.row.SilverBox" @change="HandleChanged"></el-switch>
                 </template>
             </el-table-column>
-            <el-table-column label="银瓜子换硬币">
+            <el-table-column label="换硬币">
                 <template slot-scope="scope">
                     <el-switch v-model="scope.row.Silver2Coin" @change="HandleChanged"></el-switch>
+                </template>
+            </el-table-column>
+            <el-table-column label="送礼物">
+                <template slot-scope="scope">
+                    <el-switch v-model="scope.row.AutoGift" @change="HandleChanged"></el-switch>
                 </template>
             </el-table-column>
             <el-table-column label="保持在线">
@@ -64,6 +70,7 @@ export default {
             "DailySign",
             "SilverBox",
             "Silver2Coin",
+            "AutoGift",
             "KeepAlive",
             "SmallTv",
             "Raffle",
