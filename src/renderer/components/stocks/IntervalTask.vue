@@ -133,7 +133,7 @@ export default {
     async getRoomWeardMedal(user){
       if(user.uid){
         //从uid判断获取
-        let rmid = 0;
+        let rmid = false;
         try{
           let rm = await this.$api.use(user).send("live_user/v1/UserInfo/get_weared_medal",{
             source: 1,
@@ -142,7 +142,7 @@ export default {
           },"post");
           if(rm.code == 0){
             if(rm.data && rm.data.id){
-              rmid = rm.data.roominfo.room_id;
+              rmid = rm.data.roominfo;
             }
           }
         }catch(e){
@@ -157,15 +157,67 @@ export default {
         return 0;
       }
     },
+    async getSendableGiftBag(user){
+      let bag = [];
+      try{
+        let rq = await this.$api.use(user).send("gift/v2/gift/bag_list");
+        if(rq.code==0){
+          for(let mybag of rq.data.list){
+            if(mybag.expire_at==0){
+              continue;
+            }
+            let nowTimeStamp = Math.round((new Date().valueOf())/1000);
+            if(mybag.expire_at > nowTimeStamp && mybag.expire_at - nowTimeStamp < 60*60*24){
+              //如果在24小时内过期，则尝试送出该包裹
+              bag.push(mybag);
+            }
+          }
+        }
+      }
+      catch(e){
+        this.$eve.emit("info",`尝试获取${user.name}的礼物包裹时：${e.message}`);
+      }
+      finally{
+        return bag;
+      }
+
+    },
     async TrySendGift(user){
-      let room_id = await this.getRoomWeardMedal(user);
-      if(room_id){
+      let roominfo = await this.getRoomWeardMedal(user);
+      if(roominfo){
         //当前佩戴了 勋章
 
-        // TODO : 此处应当补上对应roomid的送礼物函数
+        
+        let bag = await this.getSendableGiftBag(user);
+        if(bag.length){
+          for(let b of bag){
+            try{
+              let s = await this.$api.use(user).send("gift/v2/live/bag_send",{
+                uid: user.uid,
+                gift_id: b.gift_id,
+                ruid: roominfo.uid,
+                gift_num: b.gift_num,
+                bag_id: b.bag_id,
+                platform: "pc",
+                biz_code: "live",
+                biz_id: roominfo.room_id,
+                rnd: Math.round((new Date().valueOf())/1000),
+                storm_beat_id: 0,
+                metadata: "",
+                price: 0,
+              },"post");
+              if(s.code==0){
+                this.$eve.emit("info",`${user.name} 向 ${roominfo.uname} 赠送了 ${s.data.gift_num} 个 ${s.data.gift_name}`);
+              }
+            }catch(e){
+              this.$eve.emit("info",`${user.name} 赠送礼物时：${e.message}`);
+            }
+            
+          }
+        }
       }else{
-        // 未佩戴勋章 或出错
-        this.$eve.emit("warning",`${user.name} 打开了自动送礼物但是没有佩戴勋章 `);
+        // 未佩戴勋章 或出错 ，不操作
+
       }
     },
     async runAutoGift(){
@@ -330,6 +382,21 @@ export default {
               .send("gift/v2/live/receive_daily_bag", {}, "get"); //每日包裹，不重要
             let rq = await this.$api.use(user).send("sign/doSign", {}, "get"); //签到
             this.$eve.emit("info", `${user.name} 签到: ${rq.msg}`);
+
+            this.$api
+              .use(user)
+              .origin({
+                uri:"https://app.bilibili.com/x/v2/view/share/add",
+                method:"post",
+                form:user.SignWithBasicQuery({
+                  aid:7,
+                  access_key:user.token.access_token,
+                  from:66,
+                  platform:"android",
+                })
+              })
+              //这个地方顺便加上了主站的分享视频的5经验
+
           } catch (e) {
             this.$eve.emit("info", `${user.name} 签到: ${e.message}`);
           }

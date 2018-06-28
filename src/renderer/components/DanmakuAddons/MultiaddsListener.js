@@ -121,8 +121,13 @@ class dm {
         }
         //取出非当前直播间的另一个直播间（热度更新有延迟）
 
-        rooms.sort((a, b) => { return b.online - a.online });
-        return rooms[0].roomid; //返回人气最高的房间ID
+        if(rooms.length <= 0){
+            // fix 此处用于解决一个奇怪的undifined问题
+            return this.getOnlineRoom();
+        }else{
+            rooms.sort((a, b) => { return b.online - a.online });
+            return rooms[0].roomid; //返回人气最高的房间ID
+        }
     }
 }
 export default dm;
