@@ -106,7 +106,7 @@ export default {
         this.TuanSign(); //应援团签到
         this.Silver(); //宝箱
         this.runSilver2Coin(); //银瓜子换硬币
-        this.runAutoGift();//自动送礼物
+        this.runAutoGift(false);//自动送礼物
       });
       this.$eve.on("HeartBeat", () => {
         this.KeepAlive();
@@ -220,7 +220,10 @@ export default {
 
       }
     },
-    async runAutoGift(){
+    async runAutoGift(now=true){
+      if(!now){
+        await this.sleep(60e3); // 先等一分钟，拿到所有每日任务和签到的辣条礼物
+      }
       this.AutoGift.LastRun = this.formatTime(); //更新最后执行时间
       for(let user of this.$store.users){
         if(user.config.AutoGift && user.isLogin){
@@ -411,7 +414,7 @@ export default {
           this.TuanSign(); //应援团签到
           //this.Silver(); //宝箱
           this.runSilver2Coin(); //银瓜子换硬币
-          this.runAutoGift(); //自动送礼物
+          this.runAutoGift(false); //自动送礼物
       }, 10e3); //载入10秒后做一遍每日签到
       /* 使用cron进行定时任务,每天12点emit一个dailyTick事件 */
       let dailyjob = new CronJob(
