@@ -10,9 +10,17 @@ class dm {
         this.roomid = 0;
         this.dm = {};
         this.allow = true;
+        this._initConnect = false; //用于首次初始化的时候过滤HeartBeat的消息。
         eve.on("HeartBeat",()=>{
-            if(this.status){
-                this.CheckInType();
+            if(this._initConnect){
+                if(this.status){
+                    this.CheckInType();
+                }else{
+                    //status 变成断开，需要重新连接
+                    
+                    this.roomid = 0;
+                    this.CheckInType();
+                }
             }
         })
     }
@@ -98,36 +106,50 @@ class dm {
                     break;
             }
         });
-
+        this._initConnect = true; //设置initConnect的值，用于监听器判断当前是正在工作中状态
     }
     disconnect() {
         this.status = false;
-        this.dm.disconnect();
+        if(typeof this.dm.disconnect =="function"){
+            this.dm.disconnect();            
+        }
         this.dm = {};
     }
     async getOnlineRoom() {
-        let rq = await api.send("room/v1/area/getRoomList", {
-            platform: "web",
-            parent_area_id: this.type,
-            sort_type: "online",
-            page_size: "30",
-        }, "get");
-        let rooms =[];
-        for(let r of rq.data){
-            if(r.roomid==this.roomid){
+        let roomid ;
+        try{
+            let rq = await api.send("room/v1/area/getRoomList", {
+                platform: "web",
+                parent_area_id: this.type,
+                sort_type: "online",
+                page_size: "30",
+            }, "get");
+            let rooms =[];
+            for(let r of rq.data){
+                if(r.roomid==this.roomid){
+                }else{
+                    rooms.push(r);
+                }
+                 //取出非当前直播间的另一个直播间（热度更新有延迟）
+            }
+            if(rooms.length == 0){
+                // fix 此处用于解决一个奇怪的undifined问题
+                throw new Error("可用房间数量为 0 ");
             }else{
-                rooms.push(r);
+                rooms.sort((a, b) => { return b.online - a.online });
+                roomid = rooms[0].roomid; //返回人气最高的房间ID
             }
         }
-        //取出非当前直播间的另一个直播间（热度更新有延迟）
-
-        if(rooms.length <= 0){
-            // fix 此处用于解决一个奇怪的undifined问题
-            return await this.getOnlineRoom();
-        }else{
-            rooms.sort((a, b) => { return b.online - a.online });
-            return rooms[0].roomid; //返回人气最高的房间ID
+        catch(e){
+            eve.emit("info",`${this.name} :获取直播房间：${e.message}`);
+            roomid = this.getOnlineRoom(); 
         }
+        finally{
+            return roomid;
+        }
+
+
+        
     }
 }
 export default dm;

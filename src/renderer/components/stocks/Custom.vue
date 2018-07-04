@@ -56,7 +56,7 @@
       <el-button type="primary" plain size="small" @click="getUserCookies">复制到剪贴板</el-button>
     </el-collapse-item>
     <el-collapse-item name="总督" title="总督亲密度领取(所有用户)">
-      <el-form inline size="small" :model="guardGift">
+      <el-form inline size="small" :model="guardGift" @submit.native.prevent>
         <el-form-item label="房间号">
           <el-input placeholder="房间号1;房间号2..." v-model="guardGift.roomid"></el-input>
         </el-form-item>
