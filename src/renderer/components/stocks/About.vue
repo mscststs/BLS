@@ -37,7 +37,7 @@
       <span slot="footer" class="dialog-footer">
         <el-button @click="nv.dialogVisible = false">取 消</el-button>
         <el-button type="primary" @click="ShowNewVersion">查 看</el-button>
-        <el-button type="success" @click="Update(nv.remoteTag)" v-show="nv.allowAutoUpdate">增量更新</el-button>
+        <el-button type="success" @click="Update(nv.remoteTag)" v-show="nv.allowAutoUpdate">增量更新(beta)</el-button>
       </span>
     </el-dialog>
 
@@ -98,13 +98,11 @@ export default {
     },
     async getRemoteFile(tag,f,retry=0){
       let remoteBaseLink = [
-        `https://raw.githubusercontent.com/mscststs/BLS/master/`,
         `https://raw.githubusercontent.com/mscststs/BLS/${tag}/`,
         `https://gitee.com/mscststs/BLS/raw/${tag}/`,
       ];
       try{
         let uri = remoteBaseLink[retry]+f.ProjectRelativePath+f.name;
-        console.log(uri);
         let result = await rq({
           uri,
           method:"get",
