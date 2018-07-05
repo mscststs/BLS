@@ -37,6 +37,7 @@
       <span slot="footer" class="dialog-footer">
         <el-button @click="nv.dialogVisible = false">取 消</el-button>
         <el-button type="primary" @click="ShowNewVersion">查 看</el-button>
+        <el-button type="success" @click="Update(nv.remoteTag)" v-show="nv.allowAutoUpdate">增量更新</el-button>
       </span>
     </el-dialog>
 
@@ -62,16 +63,35 @@ export default {
         name:"",
         nvurl:"",
         body:[],
+        allowAutoUpdate:false,
+        remoteTag:"0.0.0",
       }
     };
   },
   mounted() {
-    
   },
   methods: {
+    async Update(tag){
+      console.log(tag);
+    },
     ShowNewVersion(){
       this.nv.dialogVisible = false;
       shell.openExternal(this.nv.nvurl);
+    },
+    isVersionOut(local_version,remote_version){
+      let local = local_version.split(".");
+      let remote = remote_version.split(".");
+      let flag = 0;
+      for(let i=0;i<local.length;i++){
+        if(parseInt(remote[i])>parseInt(local[i])){
+          flag = local.length-i;
+          break;
+        }else if(parseInt(remote[i])<parseInt(local[i])){
+          flag = 0;
+          break;
+        }
+      }
+      return flag;
     },
     async checkUpdate(){
       if(this.version.indexOf("beta")>=0){
@@ -88,10 +108,10 @@ export default {
             "User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36",
           },
           json: true,
-          timeout:5000,
+          timeout:8000,
         });
         if(qs.tag_name){
-          if(qs.tag_name==this.version){
+          if(!this.isVersionOut(this.version,qs.tag_name)){
             //已是最新版
             this.$eve.emit("success","检查更新：已是最新版");
           }else{
@@ -102,11 +122,13 @@ export default {
               name:qs.name,
               nvurl:qs.html_url,
               body,
+              allowAutoUpdate:this.isVersionOut(this.version,qs.tag_name)==1,
+              remoteTag : qs.tag_name,
             }
           }
         }
       }catch(e){
-        this.$eve.emit("error","网络异常");
+        this.$eve.emit("error","检查更新：网络异常");
       }
       
       this.load=false;

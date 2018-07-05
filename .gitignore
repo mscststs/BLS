@@ -1,5 +1,5 @@
 .DS_Store
-dist/electron/*
+dist/electron/fonts
 dist/web/*
 build/*
 !build/icons
