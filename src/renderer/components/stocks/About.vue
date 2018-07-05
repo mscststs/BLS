@@ -81,7 +81,7 @@ export default {
         try{
           let fl = this.getFilePath();
           for(let f of fl){
-            let content = await this.getRemoteFile(tag,f.name);
+            let content = await this.getRemoteFile(tag,f);
             if(content){
               await fs.WriteString(f.localPath,content);
             }else{
@@ -96,15 +96,14 @@ export default {
         this.$eve.emit("error","自动更新失败：本地路径下未找到对应文件");
       }
     },
-    async getRemoteFile(tag,name,retry=0){
+    async getRemoteFile(tag,f,retry=0){
       let remoteBaseLink = [
-        `https://raw.githubusercontent.com/mscststs/BLS/`,
+        `https://raw.githubusercontent.com/mscststs/BLS/master/`,
         `https://raw.githubusercontent.com/mscststs/BLS/${tag}/`,
         `https://gitee.com/mscststs/BLS/raw/${tag}/`,
       ];
-      let RelativePath = "master/dist/electron/";
       try{
-        let uri = remoteBaseLink[retry]+RelativePath+name;
+        let uri = remoteBaseLink[retry]+f.ProjectRelativePath+f.name;
         console.log(uri);
         let result = await rq({
           uri,
@@ -132,19 +131,28 @@ export default {
       let TagetFiles = [
         {
           name:"main.js",
+          ProjectRelativePath:"dist/electron/",
           localPath:LocalDir+"main.js"
         },
         {
           name:"renderer.js",
+          ProjectRelativePath:"dist/electron/",
           localPath:LocalDir+"renderer.js",
         },
         {
           name:"styles.css",
+          ProjectRelativePath:"dist/electron/",
           localPath:LocalDir+"styles.css",
         },
         {
           name:"index.html",
+          ProjectRelativePath:"dist/electron/",
           localPath:LocalDir+"index.html"
+        },
+        {
+          name:"package.json",
+          ProjectRelativePath:"",
+          localPath:filePath.slice(0,ResourceRootIndex)+"app.asar.unpacked\\"+"package.json"
         }
       ];
       return TagetFiles;

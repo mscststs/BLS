@@ -31,7 +31,8 @@
     },
     "asar": true,
     "asarUnpack":[
-      "./dist/electron"
+      "./dist/electron",
+      "./package.json"
     ],
     "dmg": {
       "contents": [
