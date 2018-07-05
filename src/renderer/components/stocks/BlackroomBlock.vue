@@ -25,13 +25,13 @@
           <el-col :span="24">
               <el-form :model="form" inline>
                 <el-form-item label="小电视回避">
-                    <el-switch v-model="form.smalltv"></el-switch>
+                    <el-switch v-model="form.smalltv" @change="BlackEventChange"></el-switch>
                 </el-form-item>
                 <el-form-item label="活动抽奖回避">
-                    <el-switch v-model="form.raffle"></el-switch>
+                    <el-switch v-model="form.raffle" @change="BlackEventChange"></el-switch>
                 </el-form-item>
                 <el-form-item label="保持在线回避">
-                    <el-switch v-model="form.online"></el-switch>
+                    <el-switch v-model="form.online" @change="BlackEventChange"></el-switch>
                 </el-form-item>
               </el-form>
           </el-col>
@@ -88,8 +88,22 @@ export default {
         this.Addlistener();
         this.DrawHeatMap(true);
         this.BlockTimeList = this.$store.data.BlockTimeList || [];
+        if(this.$store.data.BlockEvent){
+            this.form.smalltv = this.$store.data.BlockEvent.smalltv;
+            this.form.raffle = this.$store.data.BlockEvent.raffle;
+            this.form.online = this.$store.data.BlockEvent.online;
+        }
     },
     methods:{
+        BlackEventChange(){
+            this.$store.update(data=>{
+                data.BlockEvent={
+                    smalltv: this.form.smalltv,
+                    raffle: this.form.raffle,
+                    online: this.form.online,
+                }
+            })
+        },
         RemoveTimeBlock(time){
             let n = [];
             for(let t of this.BlockTimeList){
