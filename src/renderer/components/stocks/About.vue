@@ -50,6 +50,7 @@ import {shell,ipcRenderer} from "electron";
 import config from "../../../../package.json";
 import rq from "request-promise-native"
 import { setTimeout } from 'timers';
+import fs from "~/tools/fs"
 
 export default {
   name: "About",
@@ -72,7 +73,95 @@ export default {
   },
   methods: {
     async Update(tag){
-      console.log(tag);
+      this.nv.dialogVisible = false;
+      this.$eve.emit("warning","开始增量更新");
+
+      if(await this.CheckLocalFile()){
+        //文件均存在
+        try{
+          let fl = this.getFilePath();
+          for(let f of fl){
+            let content = await this.getRemoteFile(tag,f.name);
+            if(content){
+              await fs.WriteString(f.localPath,content);
+            }else{
+              new Error("更新失败，无法获取增量更新文件");
+            }
+          }
+          this.$eve.emit("restart","更新完成，即将重启以升级新版本");
+        }catch(e){
+          this.$eve.emit("error","增量更新时:"+e.message);
+        }
+      }else{
+        this.$eve.emit("error","自动更新失败：本地路径下未找到对应文件");
+      }
+    },
+    async getRemoteFile(tag,name,retry=0){
+      let remoteBaseLink = [
+        `https://raw.githubusercontent.com/mscststs/BLS/`,
+        `https://raw.githubusercontent.com/mscststs/BLS/${tag}/`,
+        `https://gitee.com/mscststs/BLS/raw/${tag}/`,
+      ];
+      let RelativePath = "master/dist/electron/";
+      try{
+        let uri = remoteBaseLink[retry]+RelativePath+name;
+        console.log(uri);
+        let result = await rq({
+          uri,
+          method:"get",
+          headers:{
+            "User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36",
+          },
+          timeout:8000,
+        });
+        //console.log(result);
+        return result;
+      }catch(e){
+        if(retry<remoteBaseLink.length){
+          return this.getRemoteFile(tag,name,retry-(-1));
+        }else{
+          this.$eve.emit("error","获取增量更新文件时: "+e.message);
+          return false;
+        }
+      }
+    },
+    getFilePath(){
+      let filePath = __filename;
+      let ResourceRootIndex = filePath.indexOf("app.asar");
+      let LocalDir = filePath.slice(0,ResourceRootIndex)+"app.asar.unpacked\\dist\\electron\\";
+      let TagetFiles = [
+        {
+          name:"main.js",
+          localPath:LocalDir+"main.js"
+        },
+        {
+          name:"renderer.js",
+          localPath:LocalDir+"renderer.js",
+        },
+        {
+          name:"styles.css",
+          localPath:LocalDir+"styles.css",
+        },
+        {
+          name:"index.html",
+          localPath:LocalDir+"index.html"
+        }
+      ];
+      return TagetFiles;
+    },
+    async CheckLocalFile(){
+      let fp = this.getFilePath();
+      let pr = [];
+      for(let s of fp){
+        pr.push(fs.exists(s.localPath));
+      }
+      let n =await Promise.all(pr);
+      for(let result of n){
+        if(!result){
+          return false;
+        }
+      }
+      return true;
     },
     ShowNewVersion(){
       this.nv.dialogVisible = false;
