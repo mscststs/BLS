@@ -114,9 +114,6 @@ export default {
   mounted() {
     this.addListener();
     this.$eve.emit("userListUpdated");
-
-    console.log(__dirname);
-    console.log(__dirname);
   },
   methods: {
     addListener() {

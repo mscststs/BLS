@@ -31,6 +31,12 @@
       :title="nv.title"
       :visible.sync="nv.dialogVisible"
       width="30%">
+      <div style="margin-bottom:7px;border-bottom:1px solid #999;border-top:1px solid #999;padding:7px;">
+        <span v-if="nv.allowAutoUpdate" style="color:#05752b"><i class="el-icon-circle-plus"></i>该更新支持增量更新</span>
+        <span v-else style="color:#f7696b"><i class="el-icon-circle-close"></i>该更新不支持增量更新</span>
+        <el-button size="mini" @click="AutoUpdateUsage">使用说明</el-button>
+        <br>
+      </div>
       <span>{{nv.name}}</span>
       <br>
       <span v-for="d in nv.body" :key="d">{{d}}<br></span>
@@ -66,12 +72,24 @@ export default {
         body:[],
         allowAutoUpdate:false,
         remoteTag:"0.0.0",
-      }
+      },
+      notify:{},
     };
   },
   mounted() {
   },
   methods: {
+    AutoUpdateUsage(){
+      if(this.notify.close && this.notify.close() || 1){
+        this.notify =this.$notify({
+          title: '增量更新使用说明',
+          message: '增量更新仅在小版本更新时可用，大版本更新说明程序的依赖组件发生了改变，只能使用安装包进行覆盖升级',
+          type: 'warning',
+          duration: 0
+        });
+      }
+      
+    },
     async Update(tag){
       this.nv.dialogVisible = false;
       this.$eve.emit("warning","开始增量更新");
