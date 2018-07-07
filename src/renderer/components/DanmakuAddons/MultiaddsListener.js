@@ -56,56 +56,59 @@ class dm {
         }
 
         let roomid = await this.getOnlineRoom();
-        this.roomid = roomid;
-        this.dm = new DmService({
-            roomId: roomid
-        });
-        this.dm.on("connected", () => {
-            this.status = true;
-            eve.emit("success", `${this.name}分区： 直播间 ${roomid} 连接成功`);
-        });
-        this.dm.connect();
-        this.dm.on("data", data => {
-            switch (data.type) {
-                case "comment":
-                    break;
-                case "SYS_MSG":
-                    /* 绘马没有roomid参数，小电视+摩天大楼等绿色通知 */
-                    if (data.roomid) {
-                        if (data.msg.indexOf("摩天大楼")>=0) {
-                            //仅提取摩天大楼
-                            if(this.allow){
-                                eve.emit("dm_SmallTv", data);
+        if(roomid!=0){
+            this.roomid = roomid;
+            this.dm = new DmService({
+                roomId: roomid
+            });
+            this.dm.on("connected", () => {
+                this.status = true;
+                eve.emit("success", `${this.name}分区： 直播间 ${roomid} 连接成功`);
+            });
+            this.dm.connect();
+            this.dm.on("data", data => {
+                switch (data.type) {
+                    case "comment":
+                        break;
+                    case "SYS_MSG":
+                        /* 绘马没有roomid参数，小电视+摩天大楼等绿色通知 */
+                        if (data.roomid) {
+                            if (data.msg.indexOf("摩天大楼")>=0) {
+                                //仅提取摩天大楼
+                                if(this.allow){
+                                    eve.emit("dm_SmallTv", data);
+                                }
                             }
+                            //console.log(data);
+                        }
+                        break;
+                    case "SYS_GIFT":
+
+                        break;
+                    case "online":
+                        if(data.type!="online"||data.number<=10){
+                            //number为0时即为下播
+                            this.disconnect();
+                            this.connect();
+                            //当直播下线时自动切换到其他主播
+                            eve.emit("info",`${this.name}分区： 检测到下播，自动切换其他房间 ...`);
                         }
                         //console.log(data);
-                    }
-                    break;
-                case "SYS_GIFT":
-
-                    break;
-                case "online":
-                    if(data.type!="online"||data.number<=10){
-                        //number为0时即为下播
+                        break;
+                    case "gift":
+                        break;
+                    case "ROOM_SILENT_OFF":
                         this.disconnect();
                         this.connect();
                         //当直播下线时自动切换到其他主播
                         eve.emit("info",`${this.name}分区： 检测到下播，自动切换其他房间 ...`);
-                    }
-                    //console.log(data);
-                    break;
-                case "gift":
-                    break;
-                case "ROOM_SILENT_OFF":
-                    this.disconnect();
-                    this.connect();
-                    //当直播下线时自动切换到其他主播
-                    eve.emit("info",`${this.name}分区： 检测到下播，自动切换其他房间 ...`);
-                    break;
-                default:
-                    break;
-            }
-        });
+                        break;
+                    default:
+                        break;
+                }
+            });
+        }
+        
         this._initConnect = true; //设置initConnect的值，用于监听器判断当前是正在工作中状态
     }
     disconnect() {
@@ -115,7 +118,7 @@ class dm {
         }
         this.dm = {};
     }
-    async getOnlineRoom() {
+    async getOnlineRoom(retry = 0) {
         let roomid ;
         try{
             let rq = await api.send("room/v1/area/getRoomList", {
@@ -142,7 +145,13 @@ class dm {
         }
         catch(e){
             eve.emit("info",`${this.name} :获取直播房间：${e.message}`);
-            roomid = this.getOnlineRoom(); 
+            if(retry>=5){
+                roomid = 0;
+            }else{
+                eve.emit("info",`获取房间列表出错，第${retry+1}次尝试`);
+                roomid = await this.getOnlineRoom(retry+1);
+            }
+
         }
         finally{
             return roomid;

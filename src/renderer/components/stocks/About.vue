@@ -103,7 +103,7 @@ export default {
             if(content){
               await fs.WriteString(f.localPath,content);
             }else{
-              new Error("更新失败，无法获取增量更新文件");
+              throw new Error("更新失败，无法获取增量更新文件");
             }
           }
           this.$eve.emit("restart","更新完成，即将重启以升级新版本");
@@ -133,7 +133,7 @@ export default {
         return result;
       }catch(e){
         if(retry<remoteBaseLink.length){
-          return this.getRemoteFile(tag,name,retry-(-1));
+          return this.getRemoteFile(tag,f,retry-(-1));
         }else{
           this.$eve.emit("error","获取增量更新文件时: "+e.message);
           return false;
