@@ -2,37 +2,54 @@
 
 > Bilibili Live Superviser
 
+#### 简介
+
+这是一个有界面的B站直播挂机工具
+
+目前已经实现的功能非常多，详情请移步Wiki：[查看 Wiki](https://github.com/mscststs/BLS/wiki) 
+
+简要包括：自动签到、任务、宝箱、分享视频、小电视等抽奖、应援团签到、瓜子自动换硬币 等
+
+另外还有：按需回避、自动送礼、网络代理、礼物统计 等
+
 #### 更新日志
-- 2018年4月2日，上传第一个可用版本到github
-- 2018年2月17日14:41:55，提交第一个版本，完成了多账户登陆控制，弹幕服务器连接控制，基本流程控制
-- 技术栈: Nodejs / Electron / Vue / element.ui
+
+- 更新日志见 commit 和 release 记录
 
 #### 安装文件下载(.exe文件)
-> 下载最新安装包即可使用
-- [Github-Releases](https://github.com/mscststs/BLS/releases)
+> 下载最新安装包即可使用，不提供 Linux 和 Mac 版，请自行编译。
+- 下载地址：[Github-Releases](https://github.com/mscststs/BLS/releases) (无法下载的可以尝试翻墙后再下载)
 
-#### 功能简介
-- BLS功能简介: [查看 Wiki](https://github.com/mscststs/BLS/wiki) 
+  在 0.1.1版本，我添加了增量更新功能，但该功能不够稳定，如果出现异常导致程序出错，请重新在release下载最新安装包。
 
 
-#### Build Setup
+#### 开发和测试
 
-> 建议使用yarn
+> 建议使用yarn，yarn的安装方法请 Google 或者 百度。
 
 
 ``` bash
-# install dependencies
-npm install
+# 安装依赖
+yarn install
 
-# serve with hot reload at localhost:9080
-npm run dev
+# 热加载模式进行开发 
+yarn run dev
 
-# build electron application for production
-npm run build
+# 生成安装包
+yarn run build
 
+# 更多 Run Script 可以查看 Package.json 文件
 
 ```
 
 ---
 
-This project was generated with [electron-vue](https://github.com/SimulatedGREG/electron-vue) using [vue-cli](https://github.com/vuejs/vue-cli). Documentation about the original structure can be found [here](https://simulatedgreg.gitbooks.io/electron-vue/content/index.html).
+*本项目使用 Electron 和 Vue.js ，基于 vue-cli 构建。*
+
+-----
+
+### 版权声明
+
+本项目开源但是**保留版权**，使用到的相关开源代码的授权声明见程序 “关于” 页。
+
+本项目的成果，包括代码和发布的二进制程序，允许免费使用，但是不允许进行二次修改并发行。
