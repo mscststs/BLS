@@ -162,8 +162,9 @@ export default {
             break;
           case "SYS_MSG":
             /* 绘马没有roomid参数，小电视+摩天大楼等绿色通知 */
+            //console.log(data);
             if (data.roomid) {
-              if (data.msg.indexOf("小电视")>=0) {
+              if (data.msg.indexOf("摩天大楼")<=0) {
                 //仅提取小电视
                 this.$eve.emit("dm_SmallTv", data);
               }
