@@ -211,7 +211,7 @@ export default new class{
     }
 
     /* 发送请求 */
-    send(url,data,method="get",baseURL=this.baseURL,retry=0){
+    send(url,data={},method="get",baseURL=this.baseURL,retry=0){
         let options = {
             method,
             uri: baseURL+url,

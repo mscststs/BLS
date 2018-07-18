@@ -28,6 +28,9 @@
       <el-tab-pane label="代理设置" name="代理设置">
         <agent-proxy></agent-proxy>
       </el-tab-pane>
+      <!-- <el-tab-pane label="高并发" name="高并发">
+        <high-performance></high-performance>
+      </el-tab-pane> -->
       <el-tab-pane label="关于" name="关于">
         <about></about>
       </el-tab-pane>
@@ -47,6 +50,7 @@ import Mock from "@/components/stocks/Mock"
 import CountCenter from "@/components/stocks/CountCenter"
 import BlackroomBlock from "@/components/stocks/BlackroomBlock"
 import AgentProxy from "@/components/stocks/AgentProxy"
+import HighPerformance from "@/components/stocks/HighPerformance"
 
 export default {
   name:"MultipleStocks",
@@ -62,6 +66,7 @@ export default {
           "调度响应",
           "小黑屋回避",
           "代理设置",
+          "高并发",
           "关于",
         ],
         selected:"自定义",
@@ -77,6 +82,7 @@ export default {
     ResponseCenter, //调度响应
     BlackroomBlock, //小黑屋回避
     AgentProxy, //代理设置
+    HighPerformance, //高并发
     About, //关于
   },
   mounted(){

@@ -1,6 +1,9 @@
 <template>
   <div>
       <el-row :gutter="10">
+        <el-col :span="24" style="margin-bottom:10px;">
+          <el-alert type="warning" title="【警告】" :closable="false">此处的日志将触发界面重绘，非常影响性能，建议使用<a @click="jmpToAbout" style="color:#6494ff;text-decoration:underline;font-weight:bold;">开发者工具</a></el-alert>
+        </el-col>
         <el-col :span="8">
             <el-checkbox label="错误" border size="small" v-model="control.error"></el-checkbox>
             <el-checkbox label="成功" border size="small" v-model="control.success"></el-checkbox>
@@ -43,14 +46,48 @@ export default {
         error: true,
         success: true,
         info:false,
+      },
+      giftconfig:{
+        status:false,
+        giftdata:[],
       }
     };
   },
   mounted() {
     this.AddListener();
+    this.initGiftConfig();
     // this.KitMsg("初始化完毕");
   },
   methods: {
+    jmpToAbout(){
+      this.$eve.emit("selectTab","关于");
+    },
+    async initGiftConfig(){
+      try{
+        let rq = await this.$api.origin({
+          uri:"https://api.live.bilibili.com/gift/v3/live/gift_config",
+          method:"get",
+          headers:{
+            Origin: "https://live.bilibili.com",
+            Referer: "https://live.bilibili.com/3"
+          }
+        });
+        this.giftconfig.giftdata = rq.data;
+        this.giftconfig.status = true;
+      }catch(e){
+        this.$eve.emit("error",`礼物列表初始化异常:${e.message}`);
+      }
+      
+      
+    },
+    getRealGiftType(msg){
+      for(let gift of this.giftconfig.giftdata){
+        if(msg.indexOf(gift.name)>=0){
+          return gift.name;
+        }
+      }
+      return "小电视";
+    },
     AddListener() {
       this.$eve.on("error", message => {
         this.KitMsg(message, "error");
@@ -68,7 +105,8 @@ export default {
         this.KitMsg(`房间 [${data.roomid}] 开启抽奖`);
       });
       this.$eve.on("dm_SmallTv",data=>{
-        this.KitMsg(`房间 [${data.roomid}] 小电视`);
+        let type = this.getRealGiftType(data.msg);
+        this.KitMsg(`房间 [${data.roomid}] ${type}`);
       });
       this.$eve.on("user_validate",user=>{
         this.revalidate(user);
