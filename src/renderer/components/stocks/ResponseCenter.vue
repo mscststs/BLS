@@ -82,7 +82,7 @@ export default {
     },
     getRealGiftType(msg){
       for(let gift of this.giftconfig.giftdata){
-        if(msg.indexOf(gift.name)>=0){
+        if(msg.indexOf(gift.name)>=0 && gift.broadcast ){ // 只判断可广播礼物
           return gift.name;
         }
       }

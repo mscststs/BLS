@@ -385,21 +385,6 @@ export default {
               .send("gift/v2/live/receive_daily_bag", {}, "get"); //每日包裹，不重要
             let rq = await this.$api.use(user).send("sign/doSign", {}, "get"); //签到
             this.$eve.emit("info", `${user.name} 签到: ${rq.msg}`);
-
-            this.$api
-              .use(user)
-              .origin({
-                uri:"https://app.bilibili.com/x/v2/view/share/add",
-                method:"post",
-                form:user.SignWithBasicQuery({
-                  aid:7,
-                  access_key:user.token.access_token,
-                  from:66,
-                  platform:"android",
-                })
-              })
-              //这个地方顺便加上了主站的分享视频的5经验
-
           } catch (e) {
             this.$eve.emit("info", `${user.name} 签到: ${e.message}`);
           }

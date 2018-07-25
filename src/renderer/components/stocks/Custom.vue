@@ -67,6 +67,18 @@
       
       
     </el-collapse-item>
+    <el-collapse-item name="主站任务" title="主站分享视频">
+      <el-form inline size="small" :model="mainSiteTask" @submit.native.prevent>
+        <el-form-item label="AV号">
+          <el-input placeholder="7" v-model="mainSiteTask.av" type="number"></el-input>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" plain size="small" @click="watchAndShareAv" :disabled="!mainSiteTask.av.length">分享</el-button>
+        </el-form-item>
+      </el-form>
+      
+      
+    </el-collapse-item>
   </el-collapse>
 </div>
 </template>
@@ -103,7 +115,10 @@ export default {
       users: [],
       guardGift:{
         roomid:"",
-      }
+      },
+      mainSiteTask:{
+        av:"",
+      },
     };
   },
   computed: {
@@ -121,6 +136,23 @@ export default {
         this.users = [];
         this.users = this.$store.users;
       });
+    },
+    async watchAndShareAv(){
+      for(let user of this.users){
+        this.$api.use(user).origin({
+          uri:"https://app.bilibili.com/x/v2/view/share/add",
+          method:"post",
+          form:user.SignWithBasicQuery({
+            aid:this.mainSiteTask.av,
+            access_key:user.token.access_token,
+            from:7,
+            platform:"android",
+          })
+        });
+        
+      }
+  
+
     },
     getGuardGift(){
       let roomid =this.guardGift.roomid;
