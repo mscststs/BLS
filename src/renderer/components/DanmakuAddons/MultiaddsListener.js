@@ -46,7 +46,8 @@ class dm {
             this.disconnect();
             this.connect();
         }else{
-            eve.emit("info",this.name + "分区检测 ：房间分区正常");
+            //eve.emit("info",this.name + "分区检测 ：房间分区正常"); 
+            //无须打印这么多正常房间消息
         }
     }
     async connect() {
@@ -140,7 +141,7 @@ class dm {
                 throw new Error("可用房间数量为 0 ");
             }else{
                 rooms.sort((a, b) => { return b.online - a.online });
-                roomid = rooms[0].roomid; //返回人气最高的房间ID
+                roomid = rooms[ Math.floor((Math.random()/2*rooms.length))].roomid; //随机取一个房间
             }
         }
         catch(e){

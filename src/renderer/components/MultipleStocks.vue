@@ -28,9 +28,9 @@
       <el-tab-pane label="代理设置" name="代理设置">
         <agent-proxy></agent-proxy>
       </el-tab-pane>
-      <el-tab-pane label="高并发" name="高并发">
+<!--       <el-tab-pane label="高并发" name="高并发">
         <high-performance></high-performance>
-      </el-tab-pane>
+      </el-tab-pane> -->
       <el-tab-pane label="关于" name="关于">
         <about></about>
       </el-tab-pane>

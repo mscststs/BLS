@@ -89,7 +89,7 @@ export default {
         this.init();
     },
     methods:{
-        initDNSList(){
+        async initDNSList(){
             
             this.control.init = true;
         },
