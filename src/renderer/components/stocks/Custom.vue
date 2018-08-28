@@ -155,7 +155,7 @@ export default {
 
     },
     getGuardGift(){
-      let roomid =this.guardGift.roomid;
+      let roomid =this.guardGift.roomid.replace(/(剩\d{0,5}分钟)/g,"");
       let roomid_array = roomid.match(/[0-9]{1,}/ig);//获取房间号数组
       for(let shortid of roomid_array){
         this.checkguardGift(shortid);
@@ -173,12 +173,12 @@ export default {
             let long_id = rq.data.room_id;
             //check
             let ck = await this.$api.send(
-              "lottery/v1/lottery/check",
+              "lottery/v1/Lottery/check_guard",
               {roomid:long_id},
               "get"
             );
             if(ck.code===0){
-              let GudList = ck.data.guard;
+              let GudList = ck.data;
               if(GudList.length){
                 //有总督
                 for(let gud of GudList){
@@ -186,7 +186,7 @@ export default {
                   let type = gud.keyword;
                   for(let user of this.$store.users){
                     let s =await  this.$api.use(user).send(
-                      "lottery/v1/lottery/join",
+                      "lottery/v2/Lottery/join",
                       {roomid:long_id,type,id},
                       "post"
                     );
