@@ -85,7 +85,6 @@ export default {
             }
         },
         getHTML(){
-            console.log(this.$refs.CountCenter.innerHTML);
             return this.$refs.CountCenter.innerHTML;
         },
         setTask(){

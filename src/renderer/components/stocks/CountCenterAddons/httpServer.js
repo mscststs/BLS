@@ -5,6 +5,7 @@ class myserver{
     constructor(getCallback){
         this.getRawHTML = getCallback;
         this.server = null;
+        this.OauthToken = "";
     }
     getResponse(){
         return `
@@ -24,7 +25,6 @@ class myserver{
     async Open(port){
         try{
             this.server = http.createServer((req,res)=>{
-                console.log(req);
                 res.writeHead(200,{"Content-type":"text/html"});
                 res.write(this.getResponse());
                 res.end();
