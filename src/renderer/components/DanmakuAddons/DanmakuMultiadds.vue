@@ -50,6 +50,11 @@ export default {
                     type:4,
                     dm:{},
                 },
+                {
+                    name:"电台",
+                    type:5,
+                    dm:{},
+                },
             ]
         };
     },
