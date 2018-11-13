@@ -35,6 +35,7 @@ export default new class{
         this.thread = 0;
         this.Agent = {
             status :false,
+            Global:false,
             Agent:{},
         }
     }
@@ -190,6 +191,13 @@ export default new class{
         this.ts = s;
         this.thread++;
         let res;
+
+        if(this.Agent.status && this.Agent.Global){
+            //检查全局代理
+            options.agent = this.Agent.agent;
+            options.timeout = 10000; //增加代理的延迟
+        }
+
         try{
 
             /*正式执行request*/

@@ -6,6 +6,12 @@
                     <el-form-item label="代理" label-width="50px">
                         <el-input v-model="Settings.ProxyString" placeholder=" http://localhost:1080  详细分类见下表"></el-input>
                     </el-form-item>
+                    <el-form-item label="类型" label-width="50px">
+                        <el-switch v-model="Settings.Global"
+                        active-text="全局代理" :disabled="Settings.connect">
+                        </el-switch>
+                        <el-tag type="warning">启用全局代理后将会代理所有的HTTP(s)请求,否则仅代理用户的请求</el-tag>
+                    </el-form-item>
                     <el-form-item label="连接" label-width="50px">
                         <el-switch v-model="Settings.connect" @change="Changestatus"></el-switch>
                         <span v-show="Settings.connect">
@@ -72,6 +78,7 @@ export default {
     return {
       Settings: {
         ProxyString: "",
+        Global:false,
         connect: false
       },
       detail:{
@@ -86,6 +93,7 @@ export default {
     init() {
       if (this.$store.data.Agent) {
         this.Settings.ProxyString = this.$store.data.Agent.agent;
+        this.Settings.Global = this.$store.data.Agent.Global;
         if (this.$store.data.Agent.status) {
           this.open();
         }
@@ -98,6 +106,9 @@ export default {
           this.$eve.emit("success","代理连接成功");
           this.Settings.connect = true;
           this.detail = raw.rq.data;
+          
+          //设置是否全局代理
+          this.$api.Agent.Global = this.Settings.Global;
           return true;
       }else{
           return false;
@@ -115,6 +126,7 @@ export default {
           this.$store.update(data => {
             data.Agent = {
               agent: this.Settings.ProxyString,
+              Global:this.Settings.Global,
               status: true
             };
           });
