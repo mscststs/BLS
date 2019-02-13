@@ -124,6 +124,16 @@ export default new class{
                         jar.setCookie(cookie,options.uri);
                     }
                     options.jar = jar;
+                    
+                    if(options.method == "post"){
+                        //检查post请求，全局插入CSRF
+                        for(let t of this.cookies.cookies){
+                            if(t.name == "bili_jct"){
+                                options.form["csrf"] = t.value;
+                                options.form["csrf_token"] = t.value;
+                            }
+                        }
+                    }
 
                     if(this.Agent.status){
                         //检查是否使用代理,仅对用户的连接使用代理

@@ -226,14 +226,6 @@ export default {
         }
       }
     },
-    getCsrfToken(cookies){
-      for(let t of cookies){
-        if(t.name == "bili_jct"){
-          return t.value;
-        }
-      }
-      return "";
-    },
     async DanmakuSend() {
       if (
         this.custom.selected.length !== 0 &&
@@ -254,7 +246,6 @@ export default {
 
           for (let user of this.users) {
             if (this.custom.selected.indexOf(user.name) >= 0) {
-              let csrftoken = this.getCsrfToken(user.cookies.cookies);
               await this.$api.use(user).send(
                 "msg/send",
                 {
@@ -265,8 +256,6 @@ export default {
                   rnd: Date.parse(new Date()) / 1000,
                   roomid: roomid,
                   bubble: 0,
-                  csrf_token:csrftoken,
-                  csrf:csrftoken,
                 },
                 "post"
               );
