@@ -15,6 +15,10 @@
     <el-form-item label="昵称" label-width="120px">
       <el-input v-model="Nuser.name" auto-complete="off"></el-input>
     </el-form-item>
+    <el-form-item label="验证码" label-width="120px" v-if="Nuser.captcha">
+      <img :src="Nuser.captcha" alt="">
+      <el-input v-model="Nuser.code"></el-input>
+    </el-form-item>
   </el-form>
   <div slot="footer" class="dialog-footer">
     <el-button @click="Nuser.FormVisisble = false">取 消</el-button>
@@ -58,11 +62,14 @@ export default {
     return {
       users: [],
       Nuser: {
+        user:null,
         FormVisisble: false,
         id: "",
         password: "",
         name: "",
-        load: false
+        captcha:false,//是否验证码/验证码base64编码
+        code:"",
+        load: false,
       }
     };
   },
@@ -89,10 +96,13 @@ export default {
 
       this.Nuser.load = false;
     },
-    async createUser(id, password, name) {
-      let s = new user(id, password, window.localStorage, name);
-      await s.Login();
-
+    async createUser(id, password, name,code) {
+      let s =this.Nuser.user = this.Nuser.user  ||  new user(id, password, window.localStorage, name);
+      let NeedCaptcha = await s.Login(true,code);
+      if(NeedCaptcha){
+        this.Nuser.captcha = NeedCaptcha;
+        throw new Error("需要输入验证码");
+      }
       try {
         for (let u of this.$store.users) {
           if (u.id == s.id || u.name == s.name) {
@@ -189,7 +199,8 @@ export default {
           await this.createUser(
             this.Nuser.id,
             this.Nuser.password,
-            this.Nuser.name
+            this.Nuser.name,
+            this.Nuser.code
           );
 
           /* 向存储库中写入新用户数据 */
@@ -220,10 +231,13 @@ export default {
     },
     clearForm() {
       this.Nuser = {
+        user:null,
         FormVisisble: false,
         id: "",
         password: "",
         name: "",
+        captcha:false,
+        code:"",
         load: false
       };
     }

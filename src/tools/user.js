@@ -124,15 +124,17 @@ class user {
         const encryptPassWord = crypto.publicEncrypt(padding, Buffer.from(hashPassWord)).toString('base64');
         return (encryptPassWord)
     }
-    async auth(key) {
+    async auth(key,code) {
         let pass = this._RSAPassWord(key)
         let base = this.BASE;
+        let captcha = code?{captcha:code}:{};
         return api.origin({
             method: 'post',
             uri: 'https://passport.bilibili.com/api/v2/oauth2/login',
             form: this.SignParams({
                 appkey: base.appKey,
                 build: base.build,
+                ...captcha,
                 mobi_app: base.mobiApp,
                 platform: base.platform,
                 password: pass,
@@ -180,7 +182,7 @@ class user {
         }
     }
 
-    async Login(po=false) {//static用于指定是否强制更新，强制更新用于修改了某些值之后需要更新
+    async Login(po=false,code=false) {//static用于指定是否强制更新，强制更新用于修改了某些值之后需要更新
 
         this.isLogin = false; // 设置登录标识
         eve.emit("userListUpdated");
@@ -193,10 +195,28 @@ class user {
 
         await this.getGVID(); //获取GVID
         let key = await this.getPublickey(); // 获取公钥
-        let auth = await this.auth(key);
-        this.set_cookies(auth);
-        eve.emit("success",`${this.name} 登录成功`);
-        eve.emit("userListUpdated");
+        try{
+            let auth = await this.auth(key,code);
+            this.set_cookies(auth);
+            eve.emit("success",`${this.name} 登录成功`);
+            eve.emit("userListUpdated");
+            return false;
+        }catch(e){
+            if(e.message.indexOf("CAPTCHA is not match")>=0){
+                //激活验证码策略
+                let img =  await api.origin({
+                    uri: 'https://passport.bilibili.com/captcha',
+                    encoding: null,
+                    jar: this._jar,
+                    headers: this._headers,
+                });
+                let base64 = "data:image/jpeg;base64,"+img.toString('base64');
+                return base64;
+
+            }else{
+                throw e ;
+            }
+        }
     }
     async RefreshCookie() {
         /* 使用Token换取新的cookies */
