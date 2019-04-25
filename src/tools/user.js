@@ -203,6 +203,7 @@ class user {
             return false;
         }catch(e){
             if(e.message.indexOf("CAPTCHA is not match")>=0){
+                console.error(`${this.name} [ ${this.id} ]触发了验证码策略，登录失败`);
                 //激活验证码策略
                 let img =  await api.origin({
                     uri: 'https://passport.bilibili.com/captcha',

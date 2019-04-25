@@ -90,16 +90,27 @@ export default {
       try {
         let users = this.$store.data.users;
         for (let u of users) {
-          await this.createUser(u.id, u.password, u.name);
+          await this.createUser(u.id, u.password, u.name,false, true);
         }
       } catch (e) {}
 
       this.Nuser.load = false;
     },
-    async createUser(id, password, name,code) {
-      let s =this.Nuser.user = this.Nuser.user  ||  new user(id, password, window.localStorage, name);
+    async createUser(id, password, name,code,initFlag = false) { //initFlag 用于排除初始化时的异常
+      let s =initFlag ?  
+              new user(id, password, window.localStorage, name) 
+              : 
+              this.Nuser.user ? 
+                      (
+                        this.Nuser.user.password = password,
+                        this.Nuser.user.id=id, 
+                        this.Nuser.user.name = name,
+                        this.Nuser.user
+                      )
+                      :
+                      this.Nuser.user = new user(id, password, window.localStorage, name);
       let NeedCaptcha = await s.Login(true,code);
-      if(NeedCaptcha){
+      if(NeedCaptcha && this.Nuser.FormVisisble){
         this.Nuser.captcha = NeedCaptcha;
         throw new Error("需要输入验证码");
       }
