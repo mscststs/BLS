@@ -36,7 +36,7 @@ export default {
                     dm:{},
                 },
                 {
-                    name:"游戏",
+                    name:"网游",
                     type:2,
                     dm:{},
                 },
@@ -53,6 +53,11 @@ export default {
                 {
                     name:"电台",
                     type:5,
+                    dm:{},
+                },
+                {
+                    name:"单机",
+                    type:6,
                     dm:{},
                 },
             ]
