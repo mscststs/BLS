@@ -56,6 +56,21 @@
             </el-row>
         </el-collapse-item>
 
+        <el-collapse-item name="轮询船员房间" title="轮询船员房间">
+            <el-row :gutter="20">
+              <el-col :span="24" >
+                <p style="color:#ea2000">此船员服务器由 dawnnnnnn@github 提供，根据约定，BLS 会向该服务器提供使用者 ID</p>
+                <p>如不需要使用此功能，请至<a @click="()=>{$eve.emit('selectTab','配置中心')}" style="color:#6494ff;text-decoration:underline;">配置中心</a>中关闭 “船员亲密” 这一项</p>
+              </el-col>
+              <el-col :span="16">
+                  <el-tag type="warning">上次运行时间: {{GuardQuery.LastRun}}</el-tag>
+              </el-col>
+              <el-col :span="8">
+                  <el-button type="success" size="small" @click="getGuardRoom">手动执行</el-button>
+              </el-col>
+            </el-row>
+        </el-collapse-item>
+
         <el-collapse-item name="保持在线" title="保持在线">
             <el-row :gutter="20">
               <el-col :span="16">
@@ -91,6 +106,11 @@ export default {
       },
       AutoRefreshToken: {
         LastRun: "无"
+      },
+      GuardQuery: {
+        use:false,
+        GuardCache:{},
+        LastRun: "无"
       }
     };
   },
@@ -110,10 +130,86 @@ export default {
       });
       this.$eve.on("HeartBeat", () => {
         this.KeepAlive();
+        this.getGuardRoom(); // 定时检查船员房间
       },-10);
       this.$eve.on("TowDayTick", () => {
         this.RefreshToken(); //更新token
       });
+    },
+    async getGuardRoom(){
+        //首先检查是否有用户开启了该功能
+        let Opener = this.$store.users.filter((u)=>{
+            return u.config.Guard;
+        });
+        if(Opener.length){
+            //开启该功能的用户数大于 0 
+            // console.log(Opener);
+            try{
+                this.GuardQuery.LastRun = this.formatTime(); //更新最后执行时间
+                let uid = Opener[Math.floor(Math.random()*Opener.length)].uid; //获取随机用户ID
+                uid = Number.isInteger(uid)?uid:100000; //处理纠错
+
+                let room = await this.$api.origin({
+                    uri:"http://118.25.108.153:8080/guard",
+                    method:"get",
+                    headers:{
+                        "User-Agent":`bilibili-live-tools/${uid}`
+                    }
+                });
+                // console.log(uid,room)
+                if(Array.isArray(room)){
+                    for(let item of room){
+                        let {GuardId,OriginRoomId,} = item;
+                        if(!this.GuardQuery.GuardCache[GuardId]){
+                            //未被缓存
+                            this.GuardQuery.GuardCache[GuardId] = 1;//加进缓存
+
+                            await Promise.all(Opener.map(user=>{
+                                return (async function (){
+                                    try{
+                                        let rq = await this.$api.use(user).send(
+                                            "lottery/v2/Lottery/join",
+                                            {roomid:OriginRoomId,type:"guard",id:GuardId},
+                                            "post"
+                                        );
+                                        if(rq.code == 0){
+                                            // console.log(rq);
+                                            //正确返回
+                                            // this.$eve.emit("info",`${user.name} 从 ${OriginRoomId} 得到 ${rq.data.message}`);
+                                            if(rq.data.message.indexOf("辣条")>=0){
+                                                //辣条？
+                                                let giftNumber = parseInt(rq.data.message.split("X")[1]) | 0; //过滤NaN
+                                                this.$eve.emit("giftCount", user.name, "辣条", giftNumber,"船员"); //提交统计
+                                            }else if(rq.data.message.indexOf("亲密度")>=0){
+                                                let giftNumber = parseInt(rq.data.message.split("+")[1]) | 0;
+                                                this.$eve.emit("giftCount", user.name, "亲密度", giftNumber,"船员"); //提交统计
+
+                                            }
+                                        }else{
+                                            this.$eve.emit("info",`${user.name} 从 ${OriginRoomId} 领取亲密度 ${rq.msg}`);
+                                        }
+                                    }catch(e){
+                                        console.log(e);
+                                        throw new Error("请求亲密度时出错");
+                                    }
+                                    
+                                }).bind(this)()
+                            }));
+
+                        }
+                    }
+                }else{
+                    throw new Error("服务器返回的数据不符合预期");
+                }
+            }catch(e){
+                console.log(e);
+                this.$eve.emit("error","获取船员房间时出错"+e.message);
+            }
+        }
+        else{
+            //当前没有用户开启该功能
+        }
+
     },
     async getCoin(user) {
       let rq = await this.$api
@@ -122,13 +218,13 @@ export default {
       this.$eve.emit("info", `${user.name} 银瓜子换硬币：${rq.msg}`);
     },
     async runSilver2Coin() {
-      this.Silver2Coin.LastRun = this.formatTime(); //更新最后执行时间
+        this.Silver2Coin.LastRun = this.formatTime(); //更新最后执行时间
 
-      for (let user of this.$store.users) {
-        if (user.config.Silver2Coin && user.isLogin) {
-          this.getCoin(user);
+        for (let user of this.$store.users) {
+            if (user.config.Silver2Coin && user.isLogin) {
+                this.getCoin(user);
+            }
         }
-      }
     },
     async getRoomWeardMedal(user){
       if(user.uid){
@@ -232,211 +328,211 @@ export default {
       }
     },
     async RefreshToken() {
-      this.AutoRefreshToken.LastRun = this.formatTime();
-      for (let user of this.$store.users) {
-        await user.RefreshToken();
-      }
+        this.AutoRefreshToken.LastRun = this.formatTime();
+        for (let user of this.$store.users) {
+            await user.RefreshToken();
+        }
     },
     BtnClick_Sign() {
-      //手动触发每日签到
-      this.Sign();
-      this.DailyTask(); //顺便做一下每日任务
-      this.TuanSign(); //应援团签到
+        //手动触发每日签到
+        this.Sign();
+        this.DailyTask(); //顺便做一下每日任务
+        this.TuanSign(); //应援团签到
     },
     sleep(ms) {
-      return new Promise(reject => {
+        return new Promise(reject => {
         setTimeout(() => {
-          reject(ms);
+            reject(ms);
         }, ms);
-      });
+        });
     },
     async HeartBeatSend(user) {
-      let it = this.$api.use(user);
-      it.headers["Referer"] = `https://live.bilibili.com/${
+        let it = this.$api.use(user);
+        it.headers["Referer"] = `https://live.bilibili.com/${
         this.$store.DanmakuRoom
-      }`; //设置referer
-      let pc = await it.send("User/userOnlineHeart", {}, "post");
-      try {
+        }`; //设置referer
+        let pc = await it.send("User/userOnlineHeart", {}, "post");
+        try {
         it.origin({
-          /* APP端心跳 */
-          uri: `https://api.live.bilibili.com/mobile/userOnlineHeart`,
-          qs: user.SignWithBasicQuery({
+            /* APP端心跳 */
+            uri: `https://api.live.bilibili.com/mobile/userOnlineHeart`,
+            qs: user.SignWithBasicQuery({
             access_key: user.token.access_token
-          }),
-          form: {
+            }),
+            form: {
             room_id: this.$store.DanmakuRoom,
             scale: "xxhdpi"
-          },
-          method: "post"
+            },
+            method: "post"
         });
-      } catch (e) {
+        } catch (e) {
         this.$eve.emit("error", e.message);
-      }
+        }
     },
     KeepAlive() {
-      this.HeartBeat.LastRun = this.formatTime(); //更新最后执行时间
+        this.HeartBeat.LastRun = this.formatTime(); //更新最后执行时间
 
-      for (let user of this.$store.users) {
+        for (let user of this.$store.users) {
         if (user.config.KeepAlive && user.isLogin) {
-          this.HeartBeatSend(user);
+            this.HeartBeatSend(user);
         }
-      }
+        }
     },
     async getSilver(user) {
-      try {
+        try {
         let rq = await this.$api.use(user).send(
-          "mobile/freeSilverCurrentTask",
-          user.SignWithBasicQuery({
+            "mobile/freeSilverCurrentTask",
+            user.SignWithBasicQuery({
             access_key: user.token.access_token
-          })
+            })
         );
         if (rq.code == 0) {
-          let time = rq.data.minute * 6e4;
-          await this.sleep(time);
-          let sl = await this.$api.use(user).send(
+            let time = rq.data.minute * 6e4;
+            await this.sleep(time);
+            let sl = await this.$api.use(user).send(
             "mobile/freeSilverAward",
             user.SignWithBasicQuery({
-              access_key: user.token.access_token
+                access_key: user.token.access_token
             })
-          );
-          this.getSilver(user); // 递归
+            );
+            this.getSilver(user); // 递归
         } else if (rq.code == -10017) {
-          this.$eve.emit("info", `${user.name} 领宝箱: ${rq.msg}`);
-          /* 今日宝箱已领完 */
+            this.$eve.emit("info", `${user.name} 领宝箱: ${rq.msg}`);
+            /* 今日宝箱已领完 */
         }
-      } catch (e) {
+        } catch (e) {
         this.$eve.emit("info", `${user.name} 领取银瓜子宝箱 : ${e.message}`);
-      }
+        }
     },
     Silver() {
-      this.SilverBox.LastRun = this.formatTime(); //更新最后运行时间
+        this.SilverBox.LastRun = this.formatTime(); //更新最后运行时间
 
-      for (let user of this.$store.users) {
+        for (let user of this.$store.users) {
         if (user.config.SilverBox && user.isLogin) {
-          this.getSilver(user);
+            this.getSilver(user);
         }
-      }
+        }
     },
     DailyTask() {
-      for (let user of this.$store.users) {
+        for (let user of this.$store.users) {
         if (user.isLogin) {
-          try {
+            try {
             this.$api
             .use(user)
             .send(
-              "activity/v1/task/receive_award",
-              { task_id: "double_watch_task" },
-              "post"
+                "activity/v1/task/receive_award",
+                { task_id: "double_watch_task" },
+                "post"
             );
-          } catch (error) {
+            } catch (error) {
             this.$eve.emit("error",error.message);
-          }
-          
+            }
+            
         }
-      }
+        }
     },
     async userTuanSign(user) {
-      try {
+        try {
         let list = await this.$api.use(user).origin({
-          uri: "https://api.vc.bilibili.com/link_group/v1/member/my_groups",
-          qs: user.SignWithBasicQuery({
+            uri: "https://api.vc.bilibili.com/link_group/v1/member/my_groups",
+            qs: user.SignWithBasicQuery({
             access_key: user.token.access_token
-          }),
-          method: "get"
+            }),
+            method: "get"
         });
         if (list.code === 0) {
-          for (let group of list.data.list) {
+            for (let group of list.data.list) {
             let sign = await this.$api.use(user).origin({
-              uri:
+                uri:
                 "https://api.vc.bilibili.com/link_setting/v1/link_setting/sign_in",
-              qs: user.SignWithBasicQuery({
+                qs: user.SignWithBasicQuery({
                 group_id: group.group_id,
                 owner_id: group.owner_uid,
                 access_key: user.token.access_token
-              }),
-              method: "get"
+                }),
+                method: "get"
             });
             this.$eve.emit(
-              "info",
-              `${user.name} 应援团 [ ${group.group_name} ] 签到 :${sign.msg}`
+                "info",
+                `${user.name} 应援团 [ ${group.group_name} ] 签到 :${sign.msg}`
             );
             //发送请求即可
-          }
+            }
         }
-      } catch (e) {
+        } catch (e) {
         this.$eve.emit("info", `${user.name} 应援团签到时: ${e.message}`);
-      }
+        }
     },
     TuanSign() {
-      for (let user of this.$store.users) {
+        for (let user of this.$store.users) {
         if (user.config.DailySign && user.isLogin) {
-          this.userTuanSign(user);
+            this.userTuanSign(user);
         }
-      }
+        }
     },
     async Sign() {
-      this.DailySign.LastRun = this.formatTime(); //更新最后运行时间
+        this.DailySign.LastRun = this.formatTime(); //更新最后运行时间
 
-      for (let user of this.$store.users) {
+        for (let user of this.$store.users) {
         if (user.config.DailySign && user.isLogin) {
-          try {
+            try {
             this.$api
-              .use(user)
-              .send("gift/v2/live/receive_daily_bag", {}, "get"); //每日包裹，不重要
+                .use(user)
+                .send("gift/v2/live/receive_daily_bag", {}, "get"); //每日包裹，不重要
             let rq = await this.$api.use(user).send("sign/doSign", {}, "get"); //签到
             this.$eve.emit("info", `${user.name} 签到: ${rq.msg}`);
-          } catch (e) {
+            } catch (e) {
             this.$eve.emit("info", `${user.name} 签到: ${e.message}`);
-          }
+            }
         }
-      }
+        }
     },
     GloBalTimeStampes() {
-      /* 负责在初始化之后提供全局计时事件 */
-      setTimeout(() => {
-          this.Sign();
-          this.DailyTask(); //顺便做一下每日任务
-          this.TuanSign(); //应援团签到
-          //this.Silver(); //宝箱
-          this.runSilver2Coin(); //银瓜子换硬币
-          this.runAutoGift(false); //自动送礼物
-      }, 10e3); //载入10秒后做一遍每日签到
-      /* 使用cron进行定时任务,每天12点emit一个dailyTick事件 */
-      let dailyjob = new CronJob(
+        /* 负责在初始化之后提供全局计时事件 */
+        setTimeout(() => {
+            this.Sign();
+            this.DailyTask(); //顺便做一下每日任务
+            this.TuanSign(); //应援团签到
+            //this.Silver(); //宝箱
+            this.runSilver2Coin(); //银瓜子换硬币
+            this.runAutoGift(false); //自动送礼物
+        }, 10e3); //载入10秒后做一遍每日签到
+        /* 使用cron进行定时任务,每天12点emit一个dailyTick事件 */
+        let dailyjob = new CronJob(
         "00 00 12 * * *",
         () => {
-          this.$eve.emit("dailyTick"); // 触发dailyTick事件
+            this.$eve.emit("dailyTick"); // 触发dailyTick事件
         },
         null,
         true
         // timeZone:"China/Shanghai",
-      );
+        );
 
-      //每2天自动重新登录
-      let SeveralDayTick = new CronJob(
+        //每2天自动重新登录
+        let SeveralDayTick = new CronJob(
         "00 00 03 */2 * *",
         () => {
-          this.$eve.emit("TowDayTick"); // 触发TowDayTick事件
+            this.$eve.emit("TowDayTick"); // 触发TowDayTick事件
         },
         null,
         true
         // timeZone:"China/Shanghai",
-      );
+        );
 
-      this.$eve.emit("HeartBeat"); // 触发心跳请求
-      let heartjob = new CronJob(
+        this.$eve.emit("HeartBeat"); // 触发心跳请求
+        let heartjob = new CronJob(
         "0 */5 * * * *",
         () => {
-          this.$eve.emit("HeartBeat"); // 触发心跳请求
+            this.$eve.emit("HeartBeat"); // 触发心跳请求
         },
         null,
         true
         // timeZone:"China/Shanghai",
-      );
+        );
     },
     formatTime(date = new Date(), fmt = "YYYY-MM-DD HH:mm:ss") {
-      date = typeof date === "number" ? new Date(date) : date;
-      var o = {
+        date = typeof date === "number" ? new Date(date) : date;
+        var o = {
         "M+": date.getMonth() + 1,
         "D+": date.getDate(),
         "h+": date.getHours() % 12 === 0 ? 12 : date.getHours() % 12,
@@ -445,8 +541,8 @@ export default {
         "s+": date.getSeconds(),
         "q+": Math.floor((date.getMonth() + 3) / 3),
         S: date.getMilliseconds()
-      };
-      var week = {
+        };
+        var week = {
         "0": "\u65e5",
         "1": "\u4e00",
         "2": "\u4e8c",
@@ -454,35 +550,35 @@ export default {
         "4": "\u56db",
         "5": "\u4e94",
         "6": "\u516d"
-      };
-      if (/(Y+)/.test(fmt)) {
+        };
+        if (/(Y+)/.test(fmt)) {
         fmt = fmt.replace(
-          RegExp.$1,
-          (date.getFullYear() + "").substr(4 - RegExp.$1.length)
+            RegExp.$1,
+            (date.getFullYear() + "").substr(4 - RegExp.$1.length)
         );
-      }
-      if (/(E+)/.test(fmt)) {
+        }
+        if (/(E+)/.test(fmt)) {
         fmt = fmt.replace(
-          RegExp.$1,
-          (RegExp.$1.length > 1
+            RegExp.$1,
+            (RegExp.$1.length > 1
             ? RegExp.$1.length > 2 ? "\u661f\u671f" : "\u5468"
             : "") + week[date.getDay() + ""]
         );
-      }
-      for (var k in o) {
+        }
+        for (var k in o) {
         if (new RegExp("(" + k + ")").test(fmt)) {
-          fmt = fmt.replace(
+            fmt = fmt.replace(
             RegExp.$1,
             RegExp.$1.length === 1
-              ? o[k]
-              : ("00" + o[k]).substr(("" + o[k]).length)
-          );
+                ? o[k]
+                : ("00" + o[k]).substr(("" + o[k]).length)
+            );
         }
-      }
-      return fmt;
+        }
+        return fmt;
     }
-  }
-};
+    }
+    };
 </script>
 <style scoped>
 </style>

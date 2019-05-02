@@ -47,6 +47,11 @@
                     <el-switch v-model="scope.row.AppRaffle" @change="HandleChanged"></el-switch>
                 </template>
             </el-table-column>
+            <el-table-column label="船员亲密">
+                <template slot-scope="scope">
+                    <el-switch v-model="scope.row.Guard" @change="HandleChanged"></el-switch>
+                </template>
+            </el-table-column>
         </el-table>
     </div>
 </template>
@@ -75,6 +80,7 @@ export default {
             "SmallTv",
             "Raffle",
             "AppRaffle",
+            "Guard",
         ];
 
         let reUpdateFlag = false;

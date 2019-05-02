@@ -20,9 +20,8 @@
         </el-col>
         <el-col :span="24">
           <div class="info">
-            <el-alert 
-            v-if="control[m.type]" 
-            v-for="m in msg" 
+            <el-alert  
+            v-for="m in filteredMsg" 
             :key="m.msg+m.time+Math.random()" 
             :type="m.type" 
             :title="m.time" 
@@ -52,6 +51,13 @@ export default {
         giftdata:[],
       }
     };
+  },
+  computed:{
+    filteredMsg(){
+      return this.msg.filter(m=>{
+        return this.control[m.type]
+      });
+    }
   },
   mounted() {
     this.AddListener();
