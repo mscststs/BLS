@@ -30,7 +30,7 @@
                 <el-form-item label="活动抽奖回避">
                     <el-switch v-model="form.raffle" @change="BlackEventChange"></el-switch>
                 </el-form-item>
-                <el-form-item label="保持在线回避">
+                <el-form-item label="心跳和亲密度回避">
                     <el-switch v-model="form.online" @change="BlackEventChange"></el-switch>
                 </el-form-item>
               </el-form>
@@ -212,7 +212,7 @@ export default {
             },-9);
             this.$eve.on("HeartBeat",()=>{
                 if(this.form.online && this.isBlockTime()){
-                    this.BlockInfo("保持在线");
+                    this.BlockInfo("心跳和亲密度");
                     return false;
                 }
             },-9);
