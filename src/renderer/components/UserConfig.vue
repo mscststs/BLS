@@ -232,6 +232,7 @@ export default {
           });
           this.clearForm();
         } catch (e) {
+              console.error(e)
           this.$message.error(e.message);
         }
 

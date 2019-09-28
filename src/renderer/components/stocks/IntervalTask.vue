@@ -366,6 +366,7 @@ export default {
             method: "post"
         });
         } catch (e) {
+              console.error(error)
         this.$eve.emit("error", e.message);
         }
     },
@@ -425,6 +426,7 @@ export default {
                 "post"
             );
             } catch (error) {
+              console.error(error)
             this.$eve.emit("error",error.message);
             }
             

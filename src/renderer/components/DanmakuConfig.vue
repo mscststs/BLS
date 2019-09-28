@@ -115,6 +115,11 @@ export default {
           this.addInfo(`${data.msg_text}`);
         }
       });
+      this.$eve.on("dm_liveLottery", data => {
+        if (this.control.active) {
+          this.addInfo(`${data.msg_self.replace(/(<%)|(%>)/g,' ')}`);
+        }
+      });
       this.$eve.on("dm_SmallTv", data => {
         if (this.control.active) {
           this.addInfo(`${data.msg_text}`.replace(/:\?/g, ""));
@@ -157,6 +162,12 @@ export default {
       });
       this.dm.on("data", data => {
         switch (data.type) {
+          case 'NOTICE_MSG':
+            if(data.msg_self.indexOf("全区")>=0 &&data.msg_self.indexOf("抽奖")>=0){
+              //全区广播礼物
+              this.$eve.emit("dm_liveLottery",data)
+            }
+            break;
           case "comment":
             this.$eve.emit("dm_chat", data);
             break;

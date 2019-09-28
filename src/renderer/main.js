@@ -21,6 +21,8 @@ Vue.prototype.$api = api
 Vue.prototype.$eve = events
 Vue.prototype.$store = new store(window.localStorage,"bls-config");
 
+window.main = Vue.prototype;
+
 /* eslint-disable no-new */
 new Vue({
   components: { App },

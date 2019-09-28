@@ -123,6 +123,11 @@ export default {
           this.raffle(data);
         });
       },-10);
+      this.$eve.on("dm_liveLottery",data=>{
+        this.Checkfish(data,()=>{
+          this.lotteryV5(data);
+        });
+      },-10)
     },
     async Checkfish(data, cb) {
       let roomid = data.roomid;
@@ -325,6 +330,54 @@ export default {
       }catch(e){
         this.$eve.emit("info",`${user.name} 参与小电视抽奖时：${e.message}`);
       }
+    },
+    async lotteryV5(data){
+      let roomid = data.real_roomid;
+      let rq = await this.$api.send("xlive/lottery-interface/v1/lottery/Check",{roomid},"get");
+      if(rq.code === 0){
+        let giftList = rq.data.gift;
+        for(let gift of giftList){
+          
+          if(this.isExsit(`新抽奖${gift.raffleId}`)){
+            continue;
+          }
+          this.$eve.emit("info",`发现新抽奖, 房间:${roomid},抽奖编号:${gift.raffleId},还有${gift.time_wait}秒开奖`);
+          this.$store.users.filter((user)=>{
+            return user.config.SmallTv && user.isLogin
+          }).forEach((user)=>{
+            if(this.NeedDispite()){
+              this.$eve.emit("info",`${user.name} 丢弃了一个抽奖, 抽奖编号：${gift.raffleId}`);
+            }else{
+              this.joinLotteryV5(user,gift.raffleId,roomid,gift.type,gift.time_wait)
+            }
+          })
+        }
+      }
+    },
+    async joinLotteryV5(user,raffleId,roomid,type,time){
+      //console.log("触发抽奖",user,raffleId)
+      time = time>0?(time+1) : 0;
+      await this.sleep(time*1e3)
+      try{
+
+        let rq = await this.$api
+          .use(user)
+          .send("xlive/lottery-interface/v5/smalltv/join",{
+            id:raffleId,
+            roomid,
+            type,
+          },"post")
+        if(rq.code == 0){
+
+          this.$eve.emit("giftCount",user.name,rq.data.award_name,rq.data.award_num,"抽奖");
+          //this.$eve.emit("info",`${user.name} 获取抽奖结果：${rq.data.award_name} X ${rq.data.award_num}`)
+        }else{
+          this.$eve.emit("info",`${user.name} 参与抽奖时：${rq.msg}`);
+        }
+      }catch(e){
+        this.$eve.emit("info",`${user.name} 参与抽奖时：${e.message}`)
+      }
+
     },
     async smalltv(data) {
       let roomid = data.real_roomid;

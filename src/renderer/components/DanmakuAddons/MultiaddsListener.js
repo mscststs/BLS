@@ -68,7 +68,14 @@ class dm {
             });
             this.dm.connect();
             this.dm.on("data", data => {
+                // console.log(data);
                 switch (data.type) {
+                    case 'NOTICE_MSG':
+                        if(data.msg_self.indexOf("全区")<0 &&data.msg_self.indexOf("抽奖")>=0){
+                            //单区广播礼物
+                            eve.emit("dm_liveLottery",data)
+                        }
+                        break;
                     case "comment":
                         break;
                     case "SYS_MSG":

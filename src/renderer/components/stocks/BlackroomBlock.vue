@@ -203,6 +203,13 @@ export default {
                     return false;
                 }
             },-9);
+            this.$eve.on("dm_liveLottery",(data)=>{
+                this.HeatResolve(data);
+                if(this.form.smalltv && this.isBlockTime()){
+                    this.BlockInfo("小电视/摩天大楼抽奖");
+                    return false;
+                }
+            },-9);
             this.$eve.on("dm_raffle",(data)=>{
                 this.HeatResolve(data);
                 if(this.form.raffle && this.isBlockTime()){
@@ -227,10 +234,11 @@ export default {
             });
         },
         HeatResolve(data){
-            if(data.msg.indexOf("小电视")>=0){
+            let msg = data.msg || data.msg_self;
+            if(msg.indexOf("小电视")>=0){
                 //小电视
                 this.Heatmark(this.count.smalltv)
-            }else if(data.msg.indexOf("摩天大楼")>=0){
+            }else if(msg.indexOf("摩天大楼")>=0){
                 //摩天大楼
                 this.Heatmark(this.count.mtdl)
             }else{
