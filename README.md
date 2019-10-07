@@ -1,4 +1,6 @@
 # BLS
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fmscststs%2FBLS.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fmscststs%2FBLS?ref=badge_shield)
+
 
 > Bilibili Live Superviser
 
@@ -53,3 +55,6 @@ yarn run build
 本项目开源但是**保留版权**，使用到的相关开源代码的授权声明见程序 “关于” 页。
 
 本项目的成果，包括代码和发布的二进制程序，允许免费使用，但是不允许进行二次修改并发行。
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fmscststs%2FBLS.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fmscststs%2FBLS?ref=badge_large)
