@@ -73,7 +73,7 @@
           <el-input placeholder="7" v-model="mainSiteTask.av" type="number"></el-input>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" plain size="small" @click="watchAndShareAv" :disabled="!mainSiteTask.av.length">分享</el-button>
+          <el-button type="primary" plain size="small" @click="watchAndShareAv" :disabled="true">分享(功能已下线)</el-button>
         </el-form-item>
       </el-form>
       

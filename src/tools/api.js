@@ -114,14 +114,7 @@ export default new class{
                         throw new Error(`${this.user.name} cookies不存在`);
                     }
                     for(let ck of this.cookies.cookies){
-                        let cookie = new tough.Cookie({
-                            key: ck.name,
-                            value: ck.value,
-                            domain: domain,
-                            httpOnly: ck.http_only==true,
-                            expires : new Date(ck.expires*1000),
-                        });
-                        jar.setCookie(cookie,options.uri);
+                        jar.setCookie(`${ck.name}=${encodeURIComponent(ck.value)};`,options.uri);
                     }
                     options.jar = jar;
                     
@@ -140,7 +133,6 @@ export default new class{
                         options.agent = this.Agent.agent;
                         options.timeout = 10000; //增加代理的延迟
                     }
-
                     return this.ori_rq(options);;
                 }
             }

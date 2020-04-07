@@ -347,6 +347,8 @@ export default {
         });
     },
     async HeartBeatSend(user) {
+        // 功能下线 TODO: 转成 cookies 接口
+        return;
         let it = this.$api.use(user);
         it.headers["Referer"] = `https://live.bilibili.com/${
         this.$store.DanmakuRoom
@@ -380,6 +382,8 @@ export default {
         }
     },
     async getSilver(user) {
+        // 功能下线 TODO: 转成 cookies 接口
+        return;
         try {
         let rq = await this.$api.use(user).send(
             "mobile/freeSilverCurrentTask",
@@ -434,6 +438,8 @@ export default {
         }
     },
     async userTuanSign(user) {
+        // 功能下线 TODO: 转成 cookies 接口
+        return;
         try {
         let list = await this.$api.use(user).origin({
             uri: "https://api.vc.bilibili.com/link_group/v1/member/my_groups",
@@ -482,7 +488,7 @@ export default {
                 .use(user)
                 .send("gift/v2/live/receive_daily_bag", {}, "get"); //每日包裹，不重要
             let rq = await this.$api.use(user).send("sign/doSign", {}, "get"); //签到
-            this.$eve.emit("info", `${user.name} 签到: ${rq.msg}`);
+            this.$eve.emit("info", `${user.name} 签到: ${rq.data ? rq.data.text :rq.message}`);
             } catch (e) {
             this.$eve.emit("info", `${user.name} 签到: ${e.message}`);
             }

@@ -2,6 +2,7 @@ import rq from "request-promise-native"
 import crypto from "crypto"
 import api from "./api.js"
 import eve from "./events"
+import {userLogin} from "./BLSv2_utils/tools"
 
 
 class user {
@@ -183,69 +184,18 @@ class user {
     }
 
     async Login(po=false,code=false) {//static用于指定是否强制更新，强制更新用于修改了某些值之后需要更新
-
-        this.isLogin = false; // 设置登录标识
-        eve.emit("userListUpdated");
-        if(this.store[this.id] && !po){
-            //如果已有缓存 并且不是强制更新时
-            this.set_cookies(JSON.parse(this.store[this.id]),true);
-            return;
-        }
-        /* 登陆流程，需要完成 获取 GVID ，获取公钥 ，RSA加密，获取token和key */
-
-        await this.getGVID(); //获取GVID
-        let key = await this.getPublickey(); // 获取公钥
-        try{
-            let auth = await this.auth(key,code);
-            this.set_cookies(auth);
-            eve.emit("success",`${this.name} 登录成功`);
-            eve.emit("userListUpdated");
-            return false;
-        }catch(e){
-            if(e.message.indexOf("CAPTCHA is not match")>=0){
-                console.error(`${this.name} [ ${this.id} ]触发了验证码策略，登录失败`);
-                //激活验证码策略
-                let img =  await api.origin({
-                    uri: 'https://passport.bilibili.com/captcha',
-                    encoding: null,
-                    jar: this._jar,
-                    headers: this._headers,
-                });
-                let base64 = "data:image/jpeg;base64,"+img.toString('base64');
-                return base64;
-
-            }else{
-                throw e ;
-            }
-        }
+        
+        this.cookies = {};
+        this.cookies.cookies = await userLogin(this.id,this.password)
+        this.isLogin = true
+        this.CheckUid()
+        
     }
     async RefreshCookie() {
-        /* 使用Token换取新的cookies */
-        let s = await api.origin({
-            method: 'POST',
-            uri: 'https://passport.bilibili.com/api/v2/oauth2/refresh_token',
-            form:this.SignParams({
-                access_token:this.token.access_token,
-                appkey:this.BASE.appKey,
-                build:this.BASE.build,
-                mobi_app:this.BASE.mobiApp,
-                platform:this.BASE.platform,
-                refresh_token:this.token.refresh_token,
-            }),
-            jar: this._jar,
-            json: true,
-            headers: this._headers,
-        }).then((res)=>{
-            if(res.code===0){
-                return res.data;
-            }else{
-                throw new Error("刷新cookies时出错"+res.messgae);
-            }
-        });
-        this.set_cookies(s);
+        this.Login(true); // Token只能重新认证
     }
     async RefreshToken() {
-        this.Login(true); // Token只能重新认证
+        //
     }
 }
 

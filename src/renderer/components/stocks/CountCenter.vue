@@ -109,7 +109,7 @@ export default {
                 //界面重排，防止挤在一起。
                 if(name=="统计中心"){
                     setTimeout(()=>{
-                        this.$refs.CountTable.doLayout();
+                        this.$refs.CountTable && this.$refs.CountTable.doLayout();
                     },100);
                 }
             });

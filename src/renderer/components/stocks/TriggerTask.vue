@@ -201,6 +201,8 @@ export default {
         }
     },
     appraffle(data){
+        // 功能下线 TODO: 转成 cookies 接口
+        return;
         let roomid = data.roomid;
         this.getAppRaffleWithRoom(roomid);
     },

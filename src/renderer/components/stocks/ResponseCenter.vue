@@ -123,14 +123,6 @@ export default {
         await user.RefreshCookie();
         this.$eve.emit("success",`${user.name} cookies更新成功`)
       }catch(e){
-        try{
-          await user.RefreshToken();
-          this.$eve.emit("success",`${user.name} Token更新成功`)
-        }
-        catch(e){
-          user.isLogin=false;
-          this.$eve.emit("error",`Token更新失败: ${e.message}`);
-        }
       }
       
     },

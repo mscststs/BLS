@@ -90,7 +90,7 @@ export default {
       try {
         let users = this.$store.data.users;
         for (let u of users) {
-          await this.createUser(u.id, u.password, u.name,false, true);
+          this.createUser(u.id, u.password, u.name,false, true);
         }
       } catch (e) {}
 

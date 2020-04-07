@@ -12,11 +12,13 @@
                     <el-switch v-model="scope.row.DailySign" @change="HandleChanged"></el-switch>
                 </template>
             </el-table-column>
+            <!--           
             <el-table-column label="每日宝箱">
                 <template slot-scope="scope">
                     <el-switch v-model="scope.row.SilverBox" @change="HandleChanged"></el-switch>
                 </template>
             </el-table-column>
+            -->
             <el-table-column label="换硬币">
                 <template slot-scope="scope">
                     <el-switch v-model="scope.row.Silver2Coin" @change="HandleChanged"></el-switch>
@@ -27,11 +29,14 @@
                     <el-switch v-model="scope.row.AutoGift" @change="HandleChanged"></el-switch>
                 </template>
             </el-table-column>
+            <!--             
             <el-table-column label="保持在线">
                 <template slot-scope="scope">
                     <el-switch v-model="scope.row.KeepAlive" @change="HandleChanged"></el-switch>
                 </template>
             </el-table-column>
+            -->
+
             <el-table-column label="小电视">
                 <template slot-scope="scope">
                     <el-switch v-model="scope.row.SmallTv" @change="HandleChanged"></el-switch>
@@ -42,11 +47,13 @@
                     <el-switch v-model="scope.row.Raffle" @change="HandleChanged"></el-switch>
                 </template>
             </el-table-column>
+            <!--             
             <el-table-column label="手机高能">
                 <template slot-scope="scope">
                     <el-switch v-model="scope.row.AppRaffle" @change="HandleChanged"></el-switch>
                 </template>
             </el-table-column>
+            -->
             <el-table-column label="船员亲密">
                 <template slot-scope="scope">
                     <el-switch v-model="scope.row.Guard" @change="HandleChanged"></el-switch>
