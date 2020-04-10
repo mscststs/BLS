@@ -10,12 +10,6 @@
                     <el-tag type="success">最近房间: {{SmallTv.roomid}}</el-tag>
                 </el-col>
                 <el-col :span="12">
-                  <el-switch 
-                    v-model="SmallTv_Use_V4" 
-                    active-text="使用v4接口" 
-                    inactive-text="使用v3接口" 
-                    inactive-color="#dda541"
-                    @change="UpdateStoreApiVersion"></el-switch>
                 </el-col>
               </el-row>
           </el-collapse-item>
@@ -64,7 +58,6 @@ export default {
       },
       indiv:[],
       dispite:5,
-      SmallTv_Use_V4:false,
     };
   },
   mounted() {
@@ -72,14 +65,6 @@ export default {
     this.init();
   },
   methods: {
-    UpdateStoreApiVersion(val){
-      this.$store.update(data=>{
-        if(!data.API_version){
-          data.API_version = {};
-        }
-        data.API_version.SmallTv_Use_V4 = val;
-      })
-    },
     DispiteUpdate(val){
       this.$store.update(data=>{
         data.LotteryDispite = val;
@@ -89,9 +74,6 @@ export default {
       if(this.$store.data.LotteryDispite||this.$store.data.LotteryDispite===0){
         //当dispite可能等于0时，就不能用if来判断是不是已经定义，需要加上一条
         this.dispite = this.$store.data.LotteryDispite;
-      }
-      if(this.$store.data.API_version&&this.$store.data.API_version.SmallTv_Use_V4){
-        this.SmallTv_Use_V4 = this.$store.data.API_version.SmallTv_Use_V4;
       }
     },
     NeedDispite(){

@@ -109,11 +109,7 @@ export default {
                       )
                       :
                       this.Nuser.user = new user(id, password, window.localStorage, name);
-      let NeedCaptcha = await s.Login(true,code);
-      if(NeedCaptcha && this.Nuser.FormVisisble){
-        this.Nuser.captcha = NeedCaptcha;
-        throw new Error("需要输入验证码");
-      }
+      await s.Login();
       try {
         for (let u of this.$store.users) {
           if (u.id == s.id || u.name == s.name) {

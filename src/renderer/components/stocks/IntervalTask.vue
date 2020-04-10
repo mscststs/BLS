@@ -39,7 +39,7 @@
                   <el-tag type="warning">上次运行时间: {{AutoGift.LastRun}}</el-tag>
               </el-col>
               <el-col :span="8">
-                  <el-button type="success" size="small" @click="runAutoGift">手动执行</el-button>
+                  <el-button type="success" size="small" @click="runAutoGift(true)">手动执行</el-button>
               </el-col>
             </el-row>
         </el-collapse-item>
@@ -159,34 +159,38 @@ export default {
                 // console.log(uid,room)
                 if(Array.isArray(room)){
                     for(let item of room){
-                        let {GuardId,OriginRoomId,} = item;
-                        if(!this.GuardQuery.GuardCache[GuardId]){
+                        let {Id,RoomId} = item;
+                        if(!this.GuardQuery.GuardCache[Id]){
                             //未被缓存
-                            this.GuardQuery.GuardCache[GuardId] = 1;//加进缓存
+                            this.GuardQuery.GuardCache[Id] = 1;//加进缓存
 
                             await Promise.all(Opener.map(user=>{
                                 return (async function (){
                                     try{
                                         let rq = await this.$api.use(user).send(
-                                            "lottery/v2/Lottery/join",
-                                            {roomid:OriginRoomId,type:"guard",id:GuardId},
+                                            "xlive/lottery-interface/v3/guard/join",
+                                            {
+                                              roomid:RoomId,
+                                              type:"guard",
+                                              id:Id
+                                            },
                                             "post"
                                         );
                                         if(rq.code == 0){
                                             // console.log(rq);
                                             //正确返回
                                             // this.$eve.emit("info",`${user.name} 从 ${OriginRoomId} 得到 ${rq.data.message}`);
-                                            if(rq.data.message.indexOf("辣条")>=0){
+                                            if(rq.data.award_text.indexOf("辣条")>=0){
                                                 //辣条？
-                                                let giftNumber = parseInt(rq.data.message.split("X")[1]) | 0; //过滤NaN
+                                                let giftNumber = parseInt(rq.data.award_text.split("X")[1]) | 0; //过滤NaN
                                                 this.$eve.emit("giftCount", user.name, "辣条", giftNumber,"船员"); //提交统计
-                                            }else if(rq.data.message.indexOf("亲密度")>=0){
-                                                let giftNumber = parseInt(rq.data.message.split("+")[1]) | 0;
+                                            }else if(rq.data.award_text.indexOf("亲密度")>=0){
+                                                let giftNumber = parseInt(rq.data.award_text.split("+")[1]) | 0;
                                                 this.$eve.emit("giftCount", user.name, "亲密度", giftNumber,"船员"); //提交统计
 
                                             }
                                         }else{
-                                            this.$eve.emit("info",`${user.name} 从 ${OriginRoomId} 领取亲密度 ${rq.msg}`);
+                                            this.$eve.emit("info",`${user.name} 从 ${RoomId} 领取亲密度 ${rq.msg}`);
                                         }
                                     }catch(e){
                                         console.log(e);
@@ -237,7 +241,7 @@ export default {
             target_id: user.uid,
           },"post");
           if(rm.code == 0){
-            if(rm.data && rm.data.id){
+            if(rm.data && rm.data.roominfo){
               rmid = rm.data.roominfo;
             }
           }
@@ -253,10 +257,10 @@ export default {
         return 0;
       }
     },
-    async getSendableGiftBag(user){
+    async getSendableGiftBag(user,roomid=23058){
       let bag = [];
       try{
-        let rq = await this.$api.use(user).send("gift/v2/gift/bag_list");
+        let rq = await this.$api.use(user).send(`xlive/web-room/v1/gift/bag_list?t=${new Date().valueOf()}&room_id=${roomid}`);
         if(rq.code==0){
           for(let mybag of rq.data.list){
             if(mybag.expire_at==0){
@@ -278,12 +282,29 @@ export default {
       }
 
     },
+    async getTargetRoom(user){
+      if(user.config.AutoGiftTargetRoom){
+        // 设置了目标房间号
+        // 尝试直接获取目标房间
+        try {
+          let rq = await this.$api.use(user).send(`xlive/web-room/v1/index/getInfoByRoom?room_id=${user.config.AutoGiftTargetRoom}`);
+          if(rq.code == 0){
+            let roominfo = {...rq.data.room_info, ...rq.data.anchor_info.base_info}
+            return roominfo
+          }else{
+            this.$eve.emit("info",`尝试获取 ${user.name} 的送礼房间失败，房间号 :${user.config.AutoGiftTargetRoom}：${e.message} `);
+          }
+        } catch (error) {
+          this.$eve.emit("info",`初始化 ${user.name} 的送礼房间失败，房间号 :${user.config.AutoGiftTargetRoom}`);
+        }
+      }else{
+        return await this.getRoomWeardMedal(user);
+      }
+    },
     async TrySendGift(user){
-      let roominfo = await this.getRoomWeardMedal(user);
+      let roominfo = await this.getTargetRoom(user)
       if(roominfo){
-        //当前佩戴了 勋章
-
-        
+        //拿到了 roominfo
         let bag = await this.getSendableGiftBag(user);
         if(bag.length){
           for(let b of bag){
@@ -292,7 +313,7 @@ export default {
                 uid: user.uid,
                 gift_id: b.gift_id,
                 ruid: roominfo.uid,
-                gift_num: b.gift_num,
+                gift_num: b.gift_num, // 临时写死
                 bag_id: b.bag_id,
                 platform: "pc",
                 biz_code: "live",

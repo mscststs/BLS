@@ -24,9 +24,12 @@
                     <el-switch v-model="scope.row.Silver2Coin" @change="HandleChanged"></el-switch>
                 </template>
             </el-table-column>
-            <el-table-column label="送礼物">
+            <el-table-column label="送礼物 (默认养勋章)" width="180px">
                 <template slot-scope="scope">
-                    <el-switch v-model="scope.row.AutoGift" @change="HandleChanged"></el-switch>
+                    <div class="flex-row">
+                        <el-switch class="flex-none padding-sm" v-model="scope.row.AutoGift" @change="HandleChanged"></el-switch>
+                        <el-input class="flex-auto padding-sm" size="mini" v-show="scope.row.AutoGift" v-model="scope.row.AutoGiftTargetRoom" @change="HandleChanged" placeholder="自定义房间"></el-input>
+                    </div>
                 </template>
             </el-table-column>
             <!--             
@@ -83,6 +86,7 @@ export default {
             "SilverBox",
             "Silver2Coin",
             "AutoGift",
+            'AutoGiftTargetRoom|',
             "KeepAlive",
             "SmallTv",
             "Raffle",
@@ -124,10 +128,15 @@ export default {
                 name:user.name,
             };
             for(let cf of configs){
-                if(StoredUserConfig[cf]){
-                    myConfig[cf] = true;
+                let key = cf;
+                let defaultValue = false;
+                if(~cf.indexOf("|")){ // 强行兼容多类型
+                    [key,defaultValue] = cf.split("|")
+                }
+                if(StoredUserConfig[key]){
+                    myConfig[key] = StoredUserConfig[key];
                 }else{
-                    myConfig[cf] = false;
+                    myConfig[key] = defaultValue;
                 }
                   //这个想法还行，undefined和false的都会false，反正也不影响
             }
@@ -192,5 +201,20 @@ export default {
 
 
 <style scoped>
+.flex-row{
+    box-sizing: border-box;
+    display:flex;
+    flex-direction: row;
+    align-items:center;
+}
+.flex-none{
+    flex:none;
+}
+.flex-auto{
+    flex:auto;
+}
+.padding-sm{
+    padding:0 5px;
+}
 
 </style>

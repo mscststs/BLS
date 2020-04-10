@@ -24,7 +24,7 @@
                   <el-input :disabled="raw.method=='get'" v-model="raw.data_post" placeholder='{"key1":"value1","key2":"value2"}'></el-input>
               </el-form-item>
               <el-form-item label="认证模式">
-                  <el-switch v-model="raw.AppSign"
+                  <el-switch v-model="raw.AppSign" disabled
                   active-text="Token模式"
                   inactive-text="Cookies模式"
                   active-color="#13ce66"

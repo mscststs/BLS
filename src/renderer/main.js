@@ -20,6 +20,7 @@ Vue.use(ElementUI)
 Vue.prototype.$api = api
 Vue.prototype.$eve = events
 Vue.prototype.$store = new store(window.localStorage,"bls-config");
+//Vue.config.silent = true // Vue 静默
 
 window.main = Vue.prototype;
 
