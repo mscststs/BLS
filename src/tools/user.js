@@ -72,10 +72,10 @@ class user {
         
     }
     async RefreshCookie() {
-        this.Login(); // Token只能重新认证
+        this.Login();
     }
     async RefreshToken() {
-        this.Login(true); // Token只能重新认证
+        this.Login();
     }
 }
 
