@@ -46,7 +46,7 @@ export default class DanmakuService extends EventEmitter {
     }
     this._heartbeatService = null
     this._checkErrorService =  _.debounce(() => {
-      this.emit('error', 'check failed')
+      this.emit('error', new Error('check failed'))
       this.reconnect()
     }, CHECK_ERROR_DELAY)
     this._giftBundleMap = new Map()
