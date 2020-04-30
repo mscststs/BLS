@@ -143,7 +143,6 @@ export default {
         });
         if(Opener.length){
             //开启该功能的用户数大于 0 
-            console.log(Opener);
             try{
                 this.GuardQuery.LastRun = this.formatTime(); //更新最后执行时间
                 let uid = Opener[Math.floor(Math.random()*Opener.length)].uid; //获取随机用户ID
@@ -156,7 +155,6 @@ export default {
                         "User-Agent":`bilibili-live-tools/${uid}`
                     }
                 });
-                console.log(room)
                 if(Array.isArray(room)){
                     for(let item of room){
                         let {Id,RoomId} = item;
