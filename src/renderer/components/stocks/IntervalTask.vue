@@ -148,8 +148,6 @@ export default {
                 this.GuardQuery.LastRun = this.formatTime(); //更新最后执行时间
                 let uid = Opener[Math.floor(Math.random()*Opener.length)].uid; //获取随机用户ID
                 uid = Number.isInteger(uid)?uid:100000; //处理纠错
-
-                console.log("??");
                 let room = await this.$api.origin({
                     uri:"http://118.25.108.153:8080/guard",
                     method:"get",
