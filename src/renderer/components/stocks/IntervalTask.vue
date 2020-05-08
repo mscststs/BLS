@@ -148,13 +148,16 @@ export default {
                 let uid = Opener[Math.floor(Math.random()*Opener.length)].uid; //获取随机用户ID
                 uid = Number.isInteger(uid)?uid:100000; //处理纠错
                 let room = await this.$api.origin({
-                    uri:"http://118.25.108.153:8080/guard",
+                    uri:"http://bls.wsd.pub/api/getGuard",
                     method:"get",
                     timeout:10000,
+                    gzip:true,
                     headers:{
                         "User-Agent":`bilibili-live-tools/${uid}`
                     }
                 });
+                console.log(room)
+                room  = room.data;
                 if(Array.isArray(room)){
                     for(let item of room){
                         let {Id,RoomId} = item;
