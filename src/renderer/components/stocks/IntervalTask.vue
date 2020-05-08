@@ -156,7 +156,6 @@ export default {
                         "User-Agent":`bilibili-live-tools/${uid}`
                     }
                 });
-                console.log(room)
                 room  = room.data;
                 if(Array.isArray(room)){
                     for(let item of room){
