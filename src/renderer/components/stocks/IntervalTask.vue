@@ -148,7 +148,7 @@ export default {
                 let uid = Opener[Math.floor(Math.random()*Opener.length)].uid; //获取随机用户ID
                 uid = Number.isInteger(uid)?uid:100000; //处理纠错
                 let room = await this.$api.origin({
-                    uri:"http://bls.wsd.pub/api/getGuard",
+                    uri:"http://bls.mscststs.com/api/getGuard",
                     method:"get",
                     timeout:10000,
                     gzip:true,
