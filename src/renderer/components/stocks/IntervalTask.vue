@@ -58,10 +58,10 @@
 
         <el-collapse-item name="轮询船员房间" title="轮询船员房间">
             <el-row :gutter="20">
-              <el-col :span="24" >
+              <!-- <el-col :span="24" >
                 <p style="color:#ea2000">此船员服务器由 dawnnnnnn@github 提供，根据约定，BLS 会向该服务器提供使用者 ID</p>
                 <p>如不需要使用此功能，请至<a @click="()=>{$eve.emit('selectTab','配置中心')}" style="color:#6494ff;text-decoration:underline;">配置中心</a>中关闭 “船员亲密” 这一项</p>
-              </el-col>
+              </el-col> -->
               <el-col :span="16">
                   <el-tag type="warning">上次运行时间: {{GuardQuery.LastRun}}</el-tag>
               </el-col>
@@ -85,6 +85,7 @@
 <script>
 import { CronJob } from "cron";
 import { setTimeout, clearTimeout } from "timers";
+import getGuardList from "../../../tools/guardIntf"
 export default {
   name: "IntervalTask",
   data() {
@@ -147,16 +148,7 @@ export default {
                 this.GuardQuery.LastRun = this.formatTime(); //更新最后执行时间
                 let uid = Opener[Math.floor(Math.random()*Opener.length)].uid; //获取随机用户ID
                 uid = Number.isInteger(uid)?uid:100000; //处理纠错
-                let room = await this.$api.origin({
-                    uri:"http://bls.mscststs.com/api/getGuard",
-                    method:"get",
-                    timeout:10000,
-                    gzip:true,
-                    headers:{
-                        "User-Agent":`bilibili-live-tools/${uid}`
-                    }
-                });
-                room  = room.data;
+                let room = await getGuardList()
                 if(Array.isArray(room)){
                     for(let item of room){
                         let {Id,RoomId} = item;

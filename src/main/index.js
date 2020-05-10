@@ -25,6 +25,9 @@ function createWindow () {
     minWidth:850,//最小窗口宽度
     minHeight:400,//最小窗口高度
     fullscreenable:false,//禁止最大化
+    webPreferences: {
+      nodeIntegration: true
+    }
   })
   ipcMain.on("DevTools",()=>{
     mainWindow.webContents.openDevTools ();
