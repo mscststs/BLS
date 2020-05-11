@@ -152,47 +152,55 @@ export default {
                 if(Array.isArray(room)){
                     for(let item of room){
                         let {Id,RoomId} = item;
-                        if(!this.GuardQuery.GuardCache[Id]){
-                            //未被缓存
-                            this.GuardQuery.GuardCache[Id] = 1;//加进缓存
+                        // if(!this.GuardQuery.GuardCache[Id]){
+                        //未被缓存
+                        // this.GuardQuery.GuardCache[Id] = 1;//加进缓存
 
-                            await Promise.all(Opener.map(user=>{
-                                return (async function (){
-                                    try{
-                                        let rq = await this.$api.use(user).send(
-                                            "xlive/lottery-interface/v3/guard/join",
-                                            {
-                                              roomid:RoomId,
-                                              type:"guard",
-                                              id:Id
-                                            },
-                                            "post"
-                                        );
-                                        if(rq.code == 0){
-                                            // console.log(rq);
-                                            //正确返回
-                                            // this.$eve.emit("info",`${user.name} 从 ${OriginRoomId} 得到 ${rq.data.message}`);
-                                            if(rq.data.award_text.indexOf("辣条")>=0){
-                                                //辣条？
-                                                let giftNumber = parseInt(rq.data.award_text.split("X")[1]) | 0; //过滤NaN
-                                                this.$eve.emit("giftCount", user.name, "辣条", giftNumber,"船员"); //提交统计
-                                            }else if(rq.data.award_text.indexOf("亲密度")>=0){
-                                                let giftNumber = parseInt(rq.data.award_text.split("+")[1]) | 0;
-                                                this.$eve.emit("giftCount", user.name, "亲密度", giftNumber,"船员"); //提交统计
+                        await Promise.all(Opener.map(user=>{
+                          let userCacheKey = user.id +  "" + Id
+                          if(this.GuardQuery.GuardCache[userCacheKey]){
+                            // 已经请求过
+                            return ""
+                          }else{
+                            return (async function (){
+                                try{
+                                    let rq = await this.$api.use(user).send(
+                                        "xlive/lottery-interface/v3/guard/join",
+                                        {
+                                          roomid:RoomId,
+                                          type:"guard",
+                                          id:Id
+                                        },
+                                        "post"
+                                    );
+                                    if(rq.code == 0){
+                                        // console.log(rq);
+                                        //正确返回
+                                        // this.$eve.emit("info",`${user.name} 从 ${OriginRoomId} 得到 ${rq.data.message}`);
+                                        this.GuardQuery.GuardCache[userCacheKey] = 1; // 加进缓存
+                                        if(rq.data.award_text.indexOf("辣条")>=0){
+                                            //辣条？
+                                            let giftNumber = parseInt(rq.data.award_text.split("X")[1]) | 0; //过滤NaN
+                                            this.$eve.emit("giftCount", user.name, "辣条", giftNumber,"船员"); //提交统计
+                                        }else if(rq.data.award_text.indexOf("亲密度")>=0){
+                                            let giftNumber = parseInt(rq.data.award_text.split("+")[1]) | 0;
+                                            this.$eve.emit("giftCount", user.name, "亲密度", giftNumber,"船员"); //提交统计
 
-                                            }
-                                        }else{
-                                            this.$eve.emit("info",`${user.name} 从 ${RoomId} 领取亲密度 ${rq.msg}`);
                                         }
-                                    }catch(e){
-                                        console.log(e);
-                                        throw new Error("请求亲密度时出错");
+                                    }else{
+                                      if(!~rq.msg.indexOf("拒绝")){
+                                        this.GuardQuery.GuardCache[userCacheKey] = 1; // 加进缓存
+                                      }
+                                        this.$eve.emit("info",`${user.name} 从 ${RoomId} 领取亲密度 ${rq.msg}`);
                                     }
-                                    
-                                }).bind(this)()
-                            }));
-
-                        }
+                                }catch(e){
+                                    console.log(e);
+                                    throw new Error("请求亲密度时出错");
+                                }
+                                
+                              }).bind(this)()
+                            }
+                          }));
                     }
                 }else{
                     throw new Error("服务器返回的数据不符合预期");
