@@ -244,7 +244,7 @@ export default {
             try{
               let qs = await rq({
                 method:"get",
-                uri:"https://gitee.com/api/v5/repos/mscststs/BLS/tags1",
+                uri:"https://gitee.com/api/v5/repos/mscststs/BLS/tags",
                 headers:{
                   "User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36",
                 },
