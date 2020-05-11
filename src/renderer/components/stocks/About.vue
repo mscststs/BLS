@@ -206,6 +206,13 @@ export default {
       }
       return flag;
     },
+    sleep(ms) {
+        return new Promise(reject => {
+        setTimeout(() => {
+            reject(ms);
+        }, ms);
+        });
+    },
     async checkUpdate(){
       if(this.version.indexOf("beta")>=0){
         //当前为测试版
@@ -214,15 +221,55 @@ export default {
       }
       this.load=true;
       try{
-        let qs = await rq({
-          method:"get",
-          uri:"https://api.github.com/repos/mscststs/BLS/releases/latest",
-          headers:{
-            "User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36",
-          },
-          json: true,
-          timeout:8000,
-        });
+        let qs = await Promise.race([
+          (async ()=>{
+            // 从 github 源
+            try{
+              let qs = await rq({
+                method:"get",
+                uri:"https://api.github.com/repos/mscststs/BLS/releases/latest",
+                headers:{
+                  "User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36",
+                },
+                json: true,
+                timeout:8000,
+              });
+              return qs
+            }catch(e){
+              // 不 return
+            }
+            await this.sleep(10000)
+          })(),
+          (async ()=>{
+            try{
+              let qs = await rq({
+                method:"get",
+                uri:"https://gitee.com/api/v5/repos/mscststs/BLS/tags1",
+                headers:{
+                  "User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36",
+                },
+                json: true,
+                timeout:8000,
+              });
+              let {name} = qs[qs.length - 1]
+              let res = {
+                tag_name:name,
+                body:"",
+                name:"更新来自 gitee 源 ， 无法获取详细信息",
+                html_url:"https://github.com/mscststs/BLS/releases",
+              }
+              return res
+            }catch(e){
+              // 不 return
+            }
+            await this.sleep(10000)
+          })(),
+          new Promise((resolve,reject)=>{
+            setTimeout(()=>{
+              reject(new Error("超时"))
+            }, 8000) // Timeout
+          })
+        ])
         if(qs.tag_name){
           if(!this.isVersionOut(this.version,qs.tag_name)){
             //已是最新版
@@ -241,6 +288,7 @@ export default {
           }
         }
       }catch(e){
+        console.log(e)
         this.$eve.emit("error","检查更新：网络异常");
       }
       
