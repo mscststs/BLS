@@ -24,6 +24,13 @@
                 你可以通过:  http://[你的IP或域名]:{{serverConfig.port}}/    来随时查看统计中心
             </el-alert>
         </el-col>
+        <el-col :span="24" style="padding:3px 3px;">
+            <el-form inline>
+                <el-form-item label="显示更新时间">
+                    <el-switch v-model="lastUpdateSwitch"></el-switch>
+                </el-form-item>
+            </el-form>
+        </el-col>
     </el-row>
     <div ref="CountCenter">
         <el-table :data="userGifts" ref="CountTable" :cell-style="{padding:'3px 0'}">
@@ -32,6 +39,10 @@
             </el-table-column>
             <el-table-column v-for="tp in types" :key="tp" :prop="tp" :label="tp">
 
+                <template slot-scope="scope">
+                    {{scope.row[tp]}}
+                    <span style="color:#aaa;font-family:mono">{{getUpdateTime(scope.row,tp)}}</span>
+                </template>
             </el-table-column>
         </el-table>
     </div>
@@ -53,16 +64,55 @@ export default {
             }),
             serverConfig:{
                 port:8877,
-                open:false,
+                open:false, 
             },
             notify:{},
+            lastUpdateMap : {},
+            lastUpdateSwitch: false,
         }
+    },
+    beforeDestroy() {
+        this.Httpserver.close() 
     },
     mounted(){
         this.AddListenner();
         this.setTask();
+        this.lastUpdateSwitch = this.$store.data.lastUpdateSwitch || false; // 默认值
+        if(this.$store.data.serverConfig){
+            this.serverConfig = this.$store.data.serverConfig;
+            if(this.serverConfig.open){
+                this.ChangeServerStatus(true)
+            }
+        }
+    },
+    watch:{
+        lastUpdateSwitch(newVal){
+            this.$store.update(data=>{
+                data.lastUpdateSwitch = newVal
+            })
+        },
+        "serverConfig":{
+            handler(newVal){
+                this.$store.update(data=>{
+                    data.serverConfig = newVal
+                })
+            },
+            deep:true,
+        }
     },
     methods:{
+        getUpdateTime(row,tp){
+            if(!this.lastUpdateSwitch){
+                return ""
+            }else{
+                let ts = {}
+                let {user} = row;
+                let time = this.lastUpdateMap[`${user}_++_${tp}`]
+                time = time ? `(${time})` : "";
+                return time
+            }
+
+        },
         ServerUsage(){
             if(this.notify.close && this.notify.close() || 1){
                 this.notify =this.$notify({
@@ -133,7 +183,7 @@ export default {
                 if(u.user === user){
                     isExist = true; //用户已存在
                     if(u[name]){
-                        u[name]+=number;
+                        u[name] += number;
                     }else{
                         u[name] = number;
                     }
@@ -145,8 +195,56 @@ export default {
                 s[name] = number;
                 this.userGifts.push(s);
             }
+            this.lastUpdateMap[`${user}_++_${name}`] = this.formatTime(new Date(),"HH:mm"); // 记录更新时间
             //console.log(this.userGifts);
         },
+        formatTime(date = new Date(), fmt = "YYYY-MM-DD HH:mm:ss") {
+            date = typeof date === "number" ? new Date(date) : date;
+            var o = {
+            "M+": date.getMonth() + 1,
+            "D+": date.getDate(),
+            "h+": date.getHours() % 12 === 0 ? 12 : date.getHours() % 12,
+            "H+": date.getHours(),
+            "m+": date.getMinutes(),
+            "s+": date.getSeconds(),
+            "q+": Math.floor((date.getMonth() + 3) / 3),
+            S: date.getMilliseconds()
+            };
+            var week = {
+            "0": "\u65e5",
+            "1": "\u4e00",
+            "2": "\u4e8c",
+            "3": "\u4e09",
+            "4": "\u56db",
+            "5": "\u4e94",
+            "6": "\u516d"
+            };
+            if (/(Y+)/.test(fmt)) {
+            fmt = fmt.replace(
+                RegExp.$1,
+                (date.getFullYear() + "").substr(4 - RegExp.$1.length)
+            );
+            }
+            if (/(E+)/.test(fmt)) {
+            fmt = fmt.replace(
+                RegExp.$1,
+                (RegExp.$1.length > 1
+                ? RegExp.$1.length > 2 ? "\u661f\u671f" : "\u5468"
+                : "") + week[date.getDay() + ""]
+            );
+            }
+            for (var k in o) {
+            if (new RegExp("(" + k + ")").test(fmt)) {
+                fmt = fmt.replace(
+                RegExp.$1,
+                RegExp.$1.length === 1
+                    ? o[k]
+                    : ("00" + o[k]).substr(("" + o[k]).length)
+                );
+            }
+            }
+            return fmt;
+        }
     },
 }
 </script>
