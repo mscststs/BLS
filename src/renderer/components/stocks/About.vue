@@ -142,8 +142,8 @@ export default {
     },
     getFilePath(){
       let filePath = __filename;
-      let ResourceRootIndex = filePath.indexOf("app.asar");
-      let LocalDir = filePath.slice(0,ResourceRootIndex)+"app.asar.unpacked\\dist\\electron\\";
+      let ResourceRootIndex = filePath.indexOf("app");
+      let LocalDir = filePath.slice(0,ResourceRootIndex)+"app\\dist\\electron\\";
       let TagetFiles = [
         {
           name:"main.js",
@@ -168,7 +168,7 @@ export default {
         {
           name:"package.json",
           ProjectRelativePath:"",
-          localPath:filePath.slice(0,ResourceRootIndex)+"app.asar.unpacked\\"+"package.json"
+          localPath:filePath.slice(0,ResourceRootIndex)+"app\\"+"package.json"
         }
       ];
       return TagetFiles;
@@ -242,6 +242,7 @@ export default {
           })(),
           (async ()=>{
             try{
+              await this.sleep(5000)
               let qs = await rq({
                 method:"get",
                 uri:"https://gitee.com/api/v5/repos/mscststs/BLS/tags",
