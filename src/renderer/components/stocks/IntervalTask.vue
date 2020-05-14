@@ -186,16 +186,20 @@ export default {
                                             let giftNumber = parseInt(rq.data.award_text.split("+")[1]) | 0;
                                             this.$eve.emit("giftCount", user.name, "亲密度", giftNumber,"船员"); //提交统计
 
+                                        }else if(rq.data.award_text === ""){
+                                          // text 为空
+                                          let {award_name , award_num} = rq.data;
+                                          this.$eve.emit("giftCount", user.name, award_name, award_num,"船员"); //提交统计
                                         }
                                     }else{
                                       if(!~rq.msg.indexOf("拒绝")){
+                                        // "加进缓存"
                                         this.GuardQuery.GuardCache[userCacheKey] = 1; // 加进缓存
                                       }
                                         this.$eve.emit("info",`${user.name} 从 ${RoomId} 领取亲密度 ${rq.msg}`);
                                     }
                                 }catch(e){
-                                    console.log(e);
-                                    throw new Error("请求亲密度时出错");
+                                    console.log("请求亲密度时出错",e);
                                 }
                                 
                               }).bind(this)()
@@ -536,6 +540,16 @@ export default {
         true
         // timeZone:"China/Shanghai",
         );
+        // 晚上自动执行一次
+        new CronJob(
+        "00 50 23 * * *",
+        () => {
+            this.$eve.emit("dailyTick"); // 触发dailyTick事件
+        },
+        null,
+        true
+        // timeZone:"China/Shanghai",
+        );
 
         //每2天自动重新登录
         let SeveralDayTick = new CronJob(
@@ -550,7 +564,7 @@ export default {
 
         this.$eve.emit("HeartBeat"); // 触发心跳请求
         let heartjob = new CronJob(
-        "0 */5 * * * *",
+        "0 */2 * * * *", // 两分钟一次
         () => {
             this.$eve.emit("HeartBeat"); // 触发心跳请求
         },
