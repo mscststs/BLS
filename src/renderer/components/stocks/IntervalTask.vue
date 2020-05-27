@@ -181,7 +181,7 @@ export default {
                                         if(rq.data.award_text.indexOf("辣条")>=0){
                                             //辣条？
                                             let giftNumber = parseInt(rq.data.award_text.split("X")[1]) | 0; //过滤NaN
-                                            this.$eve.emit("giftCount", user.name, "辣条", giftNumber,"船员"); //提交统计
+                                            this.$eve.emit("giftCount", user.name, "辣条(舰长)", giftNumber,"船员"); //提交统计
                                         }else if(rq.data.award_text.indexOf("亲密度")>=0){
                                             let giftNumber = parseInt(rq.data.award_text.split("+")[1]) | 0;
                                             this.$eve.emit("giftCount", user.name, "亲密度", giftNumber,"船员"); //提交统计
@@ -189,7 +189,7 @@ export default {
                                         }else if(rq.data.award_text === ""){
                                           // text 为空
                                           let {award_name , award_num} = rq.data;
-                                          this.$eve.emit("giftCount", user.name, award_name, award_num,"船员"); //提交统计
+                                          this.$eve.emit("giftCount", user.name, `${award_name}(舰长)`, award_num,"船员"); //提交统计
                                         }
                                     }else{
                                       if(!~rq.msg.indexOf("拒绝")){
