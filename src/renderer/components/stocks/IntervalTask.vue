@@ -286,6 +286,125 @@ export default {
       }
 
     },
+    parseRoom(roomStr,fansMedalList){
+      let [step1_str="",step2_str=""] = roomStr.split("|");
+      let step1 = step1_str.split(",").map(v=>parseInt(v)).filter(v=>{
+          return v.length!=0
+      }).filter(v=>{
+          return ~fansMedalList.map(v=>v.roomid).indexOf(v)
+      })
+      let step2 = step2_str.split(",").map(v=>parseInt(v)).filter(v=>{
+          return v.length!=0
+      }).filter(v=>{
+          return ~fansMedalList.map(v=>v.roomid).indexOf(v)
+      })
+      return {
+        step1,step2
+      }
+    },
+    async getLastGiftPack(user,roomid=23058){
+      let bag = [];
+      try{
+        let rq = await this.$api.use(user).send(`xlive/web-room/v1/gift/bag_list?t=${new Date().valueOf()}&room_id=${roomid}`);
+        if(rq.code==0){
+          for(let mybag of rq.data.list){
+            if(mybag.expire_at==0){
+              continue;
+            }
+            if(mybag.gift_id == 1){
+              //如果在24小时内过期，则尝试送出该包裹
+              bag.push(mybag);
+            }
+          }
+        }
+      }
+      catch(e){
+        this.$eve.emit("info",`尝试获取${user.name}的礼物包裹时：${e.message}`);
+      }
+      finally{
+        return bag;
+      }
+    },
+    async sendGiftByStep(user,step,fansMedalList,giftBag){
+      for(let room of step){
+        // 第一优先级
+        let medalInfo = fansMedalList.find(v=>{
+          return v.roomid === room
+        })
+        let giftNumber = medalInfo.dayLimit - medalInfo.today_feed
+        const roominfo = {
+          room_id:medalInfo.roomid,
+          uid:medalInfo.anchorInfo.uid,
+          uname:medalInfo.anchorInfo.uname,
+        }
+        while(giftNumber){
+          for(let bag of giftBag){
+            if(bag.gift_num === 0){
+              continue;
+            }
+            if(bag.gift_num < giftNumber){
+              await this.sendGift(user,bag,roominfo,bag.gift_num)
+              giftNumber -= bag.gift_num;
+              bag.gift_num = 0;
+              continue
+            }
+            if(bag.gift_num >= giftNumber ){
+              await this.sendGift(user,bag,roominfo,giftNumber)
+              giftNumber = 0;
+              bag.gift_num = bag.gift_num - giftNumber;
+              break;
+            }
+          }
+          break
+        }
+      }
+    },
+    async TrySendGift_FullAuto(user){
+      // 全自动 智能送礼模式 : 如果指定的房间不在勋章列表里，则全部送指定房间，如果指定房间在勋章列表里，则指定的房间优先，然后剩下的按照勋章等级自动赠送，不会超过勋章上限
+
+      // Step 1 : fetch All Rooms that can be Send
+      let targetRoom = user.config.AutoGiftTargetRoom;
+      let {data:{fansMedalList}} = await this.$api.use(user).send("i/api/medal?page=1&pageSize=30")
+
+
+      let {step1,step2} = this.parseRoom(targetRoom,fansMedalList)
+
+      let giftBag = await this.getLastGiftPack(user)
+      await this.sendGiftByStep(user,step1,fansMedalList,giftBag)
+
+      giftBag = giftBag.filter(mybag=>{
+        let nowTimeStamp = Math.round((new Date().valueOf())/1000);
+        if(mybag.expire_at > nowTimeStamp && mybag.expire_at - nowTimeStamp < 60*60*24){
+              //如果在24小时内过期，则尝试送出该包裹
+          return true
+        }
+      })
+      await this.sendGiftByStep(user,step2,fansMedalList,giftBag)
+
+    },
+    async sendGift(user,b,roominfo,number){
+      try{
+        let s = await this.$api.use(user).send("gift/v2/live/bag_send",{
+          uid: user.uid,
+          gift_id: b.gift_id,
+          ruid: roominfo.uid,
+          gift_num: number, // 临时写死
+          bag_id: b.bag_id,
+          platform: "pc",
+          biz_code: "live",
+          biz_id: roominfo.room_id,
+          rnd: Math.round((new Date().valueOf())/1000),
+          storm_beat_id: 0,
+          metadata: "",
+          price: 0,
+        },"post");
+        if(s.code==0){
+          this.$eve.emit("info",`${user.name} 向 ${roominfo.uname} 赠送了 ${s.data.gift_num} 个 ${s.data.gift_name}`);
+        }
+      }catch(e){
+        this.$eve.emit("info",`${user.name} 赠送礼物时：${e.message}`);
+      }
+    },
     async getTargetRoom(user){
       if(user.config.AutoGiftTargetRoom){
         // 设置了目标房间号
@@ -306,6 +425,10 @@ export default {
       }
     },
     async TrySendGift(user){
+        this.TrySendGift_FullAuto(user)
+    },
+    async TrySendGift_normal(user){
+      // 已废弃的送礼物方法
       let roominfo = await this.getTargetRoom(user)
       if(roominfo){
         //拿到了 roominfo

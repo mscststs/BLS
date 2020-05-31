@@ -28,7 +28,17 @@
                 <template slot-scope="scope">
                     <div class="flex-row">
                         <el-switch class="flex-none padding-sm" v-model="scope.row.AutoGift" @change="HandleChanged"></el-switch>
-                        <el-input class="flex-auto padding-sm" size="mini" v-show="scope.row.AutoGift" v-model="scope.row.AutoGiftTargetRoom" @change="HandleChanged" placeholder="自定义房间"></el-input>
+                        <!-- <el-input class="flex-auto padding-sm" size="mini" v-show="scope.row.AutoGift" v-model="scope.row.AutoGiftTargetRoom" @change="HandleChanged" placeholder="自定义房间"></el-input> -->
+                        <room-config
+                            :userName="scope.row.name"
+                            class="flex-auto padding-sm" 
+                            size="mini"
+                            v-show="scope.row.AutoGift" 
+                            placeholder="自定义房间"
+                            v-model="scope.row.AutoGiftTargetRoom" 
+                            @change="HandleChanged"
+                        >
+                        </room-config>
                     </div>
                 </template>
             </el-table-column>
@@ -66,136 +76,133 @@
     </div>
 </template>
 <script>
+import roomConfig from "./form/roomConfig"
+
 export default {
-  name: "ConfigCenter",
-  data() {
+    name: "ConfigCenter",
+    components:{
+        roomConfig
+    },
+    data() {
     return {
-      config: [],
+        config: [],
     };
-  },
-  mounted() {
+    },
+    mounted() {
     this.initConfig();
     this.AddListener();
-  },
-  methods: {
-    initConfig() {
-        this.config = [];//清空配置
-        let configs=[
-            //可配置项清单，由于不需要外部干预，所以不需要另外写了，直接写在堆里
-            "DailySign",
-            "SilverBox",
-            "Silver2Coin",
-            "AutoGift",
-            'AutoGiftTargetRoom|',
-            "KeepAlive",
-            "SmallTv",
-            "Raffle",
-            "AppRaffle",
-            "Guard",
-        ];
+    },
+    methods: {
+        initConfig() {
+            this.config = [];//清空配置
+            let configs=[
+                //可配置项清单，由于不需要外部干预，所以不需要另外写了，直接写在堆里
+                "DailySign",
+                "SilverBox",
+                "Silver2Coin",
+                "AutoGift",
+                'AutoGiftTargetRoom|',
+                "KeepAlive",
+                "SmallTv",
+                "Raffle",
+                "AppRaffle",
+                "Guard",
+            ];
 
-        let reUpdateFlag = false;
-        let StoredConfig;
-        if(this.$store.data.config){
-            StoredConfig = this.$store.data.config;
-        }else{
-            reUpdateFlag = true;
-            StoredConfig = [];
-        };
-        for(let user of this.$store.users){
-
-            let StoredUserConfig = null;
-
-            for(let suc of StoredConfig){
-                if(suc.name===user.name){
-                    StoredUserConfig = suc;
-                    break;
-                }
-            }
-            if(StoredUserConfig ===null){
-                StoredUserConfig={};
-            }
-
-            /* let myConfig = {
-                name:user.name,
-                dailySign:StoredUserConfig.dailySign||false,
-                KeepAlive:StoredUserConfig.KeepAlive||false,
-                SmallTv:StoredUserConfig.SmallTv||false,
-                Raffle:StoredUserConfig.Raffle||false,
-                AppRaffle:StoredUserConfig.AppRaffle||false,
-            } */
-            let myConfig={
-                name:user.name,
+            let reUpdateFlag = false;
+            let StoredConfig;
+            if(this.$store.data.config){
+                StoredConfig = this.$store.data.config;
+            }else{
+                reUpdateFlag = true;
+                StoredConfig = [];
             };
-            for(let cf of configs){
-                let key = cf;
-                let defaultValue = false;
-                if(~cf.indexOf("|")){ // 强行兼容多类型
-                    [key,defaultValue] = cf.split("|")
-                }
-                if(StoredUserConfig[key]){
-                    myConfig[key] = StoredUserConfig[key];
-                }else{
-                    myConfig[key] = defaultValue;
-                }
-                  //这个想法还行，undefined和false的都会false，反正也不影响
-            }
-            this.config.push(myConfig);
-
-            /* 用于找出StoredConfig中用户配置 */
-        }
-
-
-
-
-
-        if(reUpdateFlag){
-            /* 在初始化过程中检查出Store的config信息存在不完善 */
-            this.StoreConfig();
-        }
-        this.RefactToUsers();//完成装配后写入user中
-    },
-    RefactToUsers(){
-        for(let cf of this.config){
             for(let user of this.$store.users){
-                if(cf.name==user.name){
-                    user.config = cf;
-                    
-                    //保存到user中，以便其他组件能够查阅,省得每次都要查store，所以这边有个失误，其实之前就把config写在user里面就好了
-                    //= =emm，之前是怎么想来着，貌似是想要做成插件式的，结果越写越集中了
-                    break;
+
+                let StoredUserConfig = null;
+
+                for(let suc of StoredConfig){
+                    if(suc.name===user.name){
+                        StoredUserConfig = suc;
+                        break;
+                    }
+                }
+                if(StoredUserConfig ===null){
+                    StoredUserConfig={};
+                }
+
+                /* let myConfig = {
+                    name:user.name,
+                    dailySign:StoredUserConfig.dailySign||false,
+                    KeepAlive:StoredUserConfig.KeepAlive||false,
+                    SmallTv:StoredUserConfig.SmallTv||false,
+                    Raffle:StoredUserConfig.Raffle||false,
+                    AppRaffle:StoredUserConfig.AppRaffle||false,
+                } */
+                let myConfig={
+                    name:user.name,
+                };
+                for(let cf of configs){
+                    let key = cf;
+                    let defaultValue = false;
+                    if(~cf.indexOf("|")){ // 强行兼容多类型
+                        [key,defaultValue] = cf.split("|")
+                    }
+                    if(StoredUserConfig[key]){
+                        myConfig[key] = StoredUserConfig[key];
+                    }else{
+                        myConfig[key] = defaultValue;
+                    }
+                    //这个想法还行，undefined和false的都会false，反正也不影响
+                }
+                this.config.push(myConfig);
+
+                /* 用于找出StoredConfig中用户配置 */
+            }
+            if(reUpdateFlag){
+                /* 在初始化过程中检查出Store的config信息存在不完善 */
+                this.StoreConfig();
+            }
+            this.RefactToUsers();//完成装配后写入user中
+        },
+        RefactToUsers(){
+            for(let cf of this.config){
+                for(let user of this.$store.users){
+                    if(cf.name==user.name){
+                        user.config = cf;
+                        
+                        //保存到user中，以便其他组件能够查阅,省得每次都要查store，所以这边有个失误，其实之前就把config写在user里面就好了
+                        //= =emm，之前是怎么想来着，貌似是想要做成插件式的，结果越写越集中了
+                        break;
+                    }
                 }
             }
+        },
+        HandleChanged(){
+            // 状态切换事件，需要进行保存和状态切换
+            this.StoreConfig();
+            this.RefactToUsers();
+        },
+        StoreConfig() {
+            this.$store.update(data => {
+                data.config = this.config;
+            });
+        },
+        AddListener() {
+            this.$eve.on("configUpdated",()=>{
+                /* 其他地方改变config的时候需要emit configUpdated事件 */
+                this.initConfig(); 
+            });
+            this.$eve.on("userListUpdated",()=>{
+                
+                /* 用户列表变化的时候也需要同时改变config
+                    由于用户列表初始化的时候会多次触发这个事件，因此不需要另外初始化
+                */
+                this.initConfig();
+            });
+
         }
-    },
-    HandleChanged(){
-        // 状态切换事件，需要进行保存和状态切换
-        this.StoreConfig();
-        this.RefactToUsers();
-    },
-    StoreConfig() {
-      this.$store.update(data => {
-          data.config = this.config;
-      });
-    },
-    AddListener() {
-        this.$eve.on("configUpdated",()=>{
-            /* 其他地方改变config的时候需要emit configUpdated事件 */
-            this.initConfig(); 
-        });
-        this.$eve.on("userListUpdated",()=>{
-            
-            /* 用户列表变化的时候也需要同时改变config
-                由于用户列表初始化的时候会多次触发这个事件，因此不需要另外初始化
-            */
-            this.initConfig();
-        });
-
     }
-
-
-
-  }
 };
 </script>
 
