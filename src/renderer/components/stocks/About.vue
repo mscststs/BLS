@@ -12,7 +12,8 @@
      <el-form style="margin-top:30px;" inline>
        
        <el-form-item label="">
-         <el-button type="success" plain @click="donate">捐赠(Alipay)</el-button>
+         <el-button type="primary" @click="donate">捐赠(Alipay)</el-button>
+         <el-button type="success" @click="donateWechat">捐赠(WechatPay)</el-button>
        </el-form-item>
        <el-form-item label="">
          <el-button type="primary" plain @click="dev">开发者工具</el-button>
@@ -300,6 +301,10 @@ export default {
     },
     donate(){
       this.open("https://blve.mscststs.com/img/Pay.png");
+      this.$eve.emit("success","感谢捐赠");
+    },
+    donateWechat(){
+      this.open("https://blve.mscststs.com/img/wechat_pay_qrcode.png");
       this.$eve.emit("success","感谢捐赠");
     },
     open(url){
