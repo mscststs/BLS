@@ -38,6 +38,16 @@
                         :color="'#'+(medal.color).toString(16)"
                     >{{medal.medal_name}}</el-tag>
             </p>
+            <p>
+                第三优先级:
+                <el-input 
+                style="width:50%;"
+                v-model="form.step3"
+                size="mini" 
+                placeholder="一个房间号，该房间用于处理所有未用完的一天内辣条">
+
+                </el-input>
+            </p>
             <el-table ref="table" :data="fansMedalList"  :cell-style='{padding:"1px 0"}' style="width:100%;"
             >
                 <el-table-column label="勋章名称" >
@@ -135,6 +145,7 @@ export default {
             form:{
                 step1:[],
                 step2:[],
+                step3:""
             },
             dialogVisible:false,
             fansMedalList:[],
@@ -161,7 +172,7 @@ export default {
     },
     methods:{
         save(){
-            let val = this.form.step1.join(",")+"|"+this.form.step2.join(",")
+            let val = this.form.step1.join(",")+"|"+this.form.step2.join(",")+"|"+this.form.step3
             this.setFormValue(val)
             this.dialogVisible = false
         },
@@ -174,7 +185,7 @@ export default {
             this.form[obj].push(row.roomid)
         },
         parseValueToArray(){
-            let [step1_str="",step2_str=""] = this.formValue.split("|")
+            let [step1_str="",step2_str="",step3_str=""] = this.formValue.split("|")
             this.form.step1 = step1_str.split(",").map(v=>parseInt(v)).filter(v=>{
                 return v.length!=0
             }).filter(v=>{
@@ -185,6 +196,7 @@ export default {
             }).filter(v=>{
                 return ~this.fansMedalList.map(v=>v.roomid).indexOf(v)
             })
+            this.form.step3 = step3_str
         },
         async fetchMedal(){
             let {data:{fansMedalList}} = await this.$api.use(this.user).send("i/api/medal?page=1&pageSize=30")

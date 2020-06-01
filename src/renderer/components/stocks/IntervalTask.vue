@@ -287,7 +287,7 @@ export default {
 
     },
     parseRoom(roomStr,fansMedalList){
-      let [step1_str="",step2_str=""] = roomStr.split("|");
+      let [step1_str="",step2_str="",step3=""] = roomStr.split("|");
       let step1 = step1_str.split(",").map(v=>parseInt(v)).filter(v=>{
           return v.length!=0
       }).filter(v=>{
@@ -299,7 +299,7 @@ export default {
           return ~fansMedalList.map(v=>v.roomid).indexOf(v)
       })
       return {
-        step1,step2
+        step1,step2,step3
       }
     },
     async getLastGiftPack(user,roomid=23058){
@@ -367,10 +367,10 @@ export default {
       let {data:{fansMedalList}} = await this.$api.use(user).send("i/api/medal?page=1&pageSize=30")
 
 
-      let {step1,step2} = this.parseRoom(targetRoom,fansMedalList)
+      let {step1,step2,step3} = this.parseRoom(targetRoom,fansMedalList)
 
       let giftBag = await this.getLastGiftPack(user)
-      await this.sendGiftByStep(user,step1,fansMedalList,giftBag)
+      await this.sendGiftByStep(user,step1,fansMedalList,giftBag) // Step 1
 
       giftBag = giftBag.filter(mybag=>{
         let nowTimeStamp = Math.round((new Date().valueOf())/1000);
@@ -379,7 +379,16 @@ export default {
           return true
         }
       })
-      await this.sendGiftByStep(user,step2,fansMedalList,giftBag)
+      await this.sendGiftByStep(user,step2,fansMedalList,giftBag) // Step 2
+
+      // Step3
+      let rq = await this.$api.use(user).send(`xlive/web-room/v1/index/getInfoByRoom?room_id=${step3}`);
+      if(rq.code == 0){
+        let roominfo = {...rq.data.room_info, ...rq.data.anchor_info.base_info}
+        for(let bag of giftBag){
+          await this.sendGift(user,bag,roominfo,bag.gift_num)
+        }
+      }
 
     },
     async sendGift(user,b,roominfo,number){
