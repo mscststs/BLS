@@ -62,6 +62,14 @@
                 <p style="color:#ea2000">此船员服务器由 dawnnnnnn@github 提供，根据约定，BLS 会向该服务器提供使用者 ID</p>
                 <p>如不需要使用此功能，请至<a @click="()=>{$eve.emit('selectTab','配置中心')}" style="color:#6494ff;text-decoration:underline;">配置中心</a>中关闭 “船员亲密” 这一项</p>
               </el-col> -->
+              <el-col>
+                <el-form inline>
+                  <el-form-item label="自定义舰长接口">
+                    <el-input size="mini" style="width:300px" v-model="GuardQuery.GuardUrlConfig"></el-input>
+                  </el-form-item>
+                </el-form>
+                
+              </el-col>
               <el-col :span="16">
                   <el-tag type="warning">上次运行时间: {{GuardQuery.LastRun}}</el-tag>
               </el-col>
@@ -110,14 +118,25 @@ export default {
       },
       GuardQuery: {
         use:false,
+        GuardUrlConfig:"",
         GuardCache:{},
         LastRun: "无"
       }
     };
   },
+  watch:{
+    "GuardQuery.GuardUrlConfig":function (newVal){
+      this.$store.update(data=>{
+        data.GuardUrlConfig = newVal
+      })
+    }
+  },
   mounted() {
     this.addListener(); //添加监听器
     this.GloBalTimeStampes(); //全局计时事件
+    if(this.$store.data.GuardUrlConfig){
+      this.GuardQuery.GuardUrlConfig = this.$store.data.GuardUrlConfig;
+    }
   },
   methods: {
     addListener() {
@@ -148,7 +167,7 @@ export default {
                 this.GuardQuery.LastRun = this.formatTime(); //更新最后执行时间
                 let uid = Opener[Math.floor(Math.random()*Opener.length)].uid; //获取随机用户ID
                 uid = Number.isInteger(uid)?uid:100000; //处理纠错
-                let room = await getGuardList()
+                let room = await getGuardList(this.GuardQuery.GuardUrlConfig,uid)
                 if(Array.isArray(room)){
                     for(let item of room){
                         let {Id,RoomId} = item;
@@ -696,7 +715,7 @@ export default {
 
         this.$eve.emit("HeartBeat"); // 触发心跳请求
         let heartjob = new CronJob(
-        "0 */2 * * * *", // 两分钟一次
+        "0 */5 * * * *", // 5分钟一次
         () => {
             this.$eve.emit("HeartBeat"); // 触发心跳请求
         },
