@@ -33,7 +33,6 @@ async function getGuardListByUrl(urlConfig,uid=100000){
         if(parse){
             parse.split(".").forEach(key=>{
                 target = target[key]
-                console.log(target,key)
             })
         }
         return target
