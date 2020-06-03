@@ -350,8 +350,8 @@ export default {
             }
             if(bag.gift_num >= giftNumber ){
               await this.sendGift(user,bag,roominfo,giftNumber)
-              giftNumber = 0;
               bag.gift_num = bag.gift_num - giftNumber;
+              giftNumber = 0;
               break;
             }
           }
